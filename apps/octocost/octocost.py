@@ -18,11 +18,11 @@ class OctoCost(hass.Hass):
             gas_tariff = gas.get("gas_tariff", None)
             MPRN = gas.get("mprn", None)
             GASSERIAL = gas.get("gasserial", None)
-            gasstartdate = datetime.date.fromisoformat(str(gas.get("gas_startdate")))
+            gas_start_date = datetime.date.fromisoformat(str(gas.get("gas_startdate")))
 
-        elecstartdate = datetime.date.fromisoformat(str(self.args["startdate"]))
+        elec_start_date = datetime.date.fromisoformat(str(self.args["startdate"]))
 
-        consumptionurl = (
+        elec_consumption_url = (
             "https://api.octopus.energy/"
             + "v1/electricity-meter-points/"
             + str(MPAN)
@@ -30,7 +30,7 @@ class OctoCost(hass.Hass):
             + str(SERIAL)
             + "/consumption/"
         )
-        costurl = (
+        agile_cost_url = (
             "https://api.octopus.energy/v1/products/"
             + "AGILE-18-02-21/electricity-tariffs/E-1R-AGILE-18-02-21-"
             + str(region).upper()
@@ -38,7 +38,7 @@ class OctoCost(hass.Hass):
         )
 
         if gas:
-            gasconsumptionurl = (
+            gas_consumption_url = (
                 "https://api.octopus.energy/"
                 + "v1/gas-meter-points/"
                 + str(MPRN)
@@ -46,7 +46,7 @@ class OctoCost(hass.Hass):
                 + str(GASSERIAL)
                 + "/consumption/"
             )
-            gascosturl = (
+            gas_cost_url = (
                 "https://api.octopus.energy/v1/products/"
                 + gas_tariff
                 + "/gas-tariffs/G-1R-"
@@ -59,17 +59,17 @@ class OctoCost(hass.Hass):
         self.run_in(
             self.cost_and_usage_callback,
             5,
-            use=consumptionurl,
-            cost=costurl,
-            date=elecstartdate,
+            use=elec_consumption_url,
+            cost=agile_cost_url,
+            date=elec_start_date,
         )
         if gas:
             self.run_in(
                 self.cost_and_usage_callback,
                 65,
-                use=gasconsumptionurl,
-                cost=gascosturl,
-                date=gasstartdate,
+                use=gas_consumption_url,
+                cost=gas_cost_url,
+                date=gas_start_date,
                 gas=True,
             )
 
@@ -77,19 +77,20 @@ class OctoCost(hass.Hass):
             self.run_daily(
                 self.cost_and_usage_callback,
                 datetime.time(hour, 5, 0),
-                use=consumptionurl,
-                cost=costurl,
-                date=elecstartdate,
+                use=elec_consumption_url,
+                cost=agile_cost_url,
+                date=elec_start_date,
             )
 
             if gas:
                 self.run_daily(
                     self.cost_and_usage_callback,
                     datetime.time(hour, 7, 0),
-                    use=gasconsumptionurl,
-                    cost=gascosturl,
-                    date=gasstartdate,
+                    use=gas_consumption_url,
+                    cost=gas_cost_url,
+                    date=gas_start_date,
                     gas=True,
+                    gasprice=gas_std_chg_url,
                 )
 
     @classmethod
@@ -102,7 +103,7 @@ class OctoCost(hass.Hass):
 
     def cost_and_usage_callback(self, kwargs):
         self.useurl = kwargs.get("use")
-        self.costurl = kwargs.get("cost")
+        self.agile_cost_url = kwargs.get("cost")
         self.startdate = kwargs.get("date")
         self.gas = kwargs.get("gas", False)
         today = datetime.date.today()
