@@ -12,3 +12,13 @@ def no_http_requests(monkeypatch):
     monkeypatch.setattr(
         "urllib3.connectionpool.HTTPConnectionPool.urlopen", urlopen_mock
     )
+
+@pytest.fixture(name="mock_elec_meter_points")
+def fixture_mock_elec_meter_points(requests_mock):
+  """
+  Mock response for getting meter points used to determine the region
+  """
+  requests_mock.get(
+    "https://api.octopus.energy/v1/electricity-meter-points/12345",
+    text= open("tests/fixtures/elec-meter-points.json", "r").read()
+  )
