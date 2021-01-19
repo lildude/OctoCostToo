@@ -188,7 +188,7 @@ class OctoCost(hass.Hass):
     def calculate_count(self, start):
         numberdays = self.yesterday - start
         numberdays = numberdays.days
-        self.expectedcount = ((numberdays + 1) * 48) - 1
+        return ((numberdays + 1) * 48) - 1
 
     def calculate_cost_and_usage(self, start):
         self.calculate_count(start=start)
