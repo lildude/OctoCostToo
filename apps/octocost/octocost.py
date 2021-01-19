@@ -10,60 +10,93 @@ from appdaemon.plugins.hass import hassapi as hass
 class OctoCost(hass.Hass):
     def initialize(self):
         self.auth = self.args["auth"]
+        self.mpan = self.args["mpan"]
+        self.serial = self.args["serial"]
         # We probably shouldn't be making API calls when initialising
         #self.region = self.args.get("region", self.find_region(self.mpan))
         self.region = self.args["region"].upper()
+        self.elec_start_date = datetime.date.fromisoformat(str(self.args["start_date"]))
+        self.gas = self.args.get("gas", None)
+        if self.gas:
+            self.gas_tariff = self.gas.get("gas_tariff", None)
+            self.mprn = self.gas.get("mprn", None)
+            self.gas_serial = self.gas.get("gas_serial", None)
+            self.gas_start_date = datetime.date.fromisoformat(str(self.gas.get("gas_start_date")))
 
-        elec_start_date = datetime.date.fromisoformat(str(self.args["startdate"]))
-
-        elec_consumption_url = (
+        self.elec_consumption_url = (
             "https://api.octopus.energy/"
             + "v1/electricity-meter-points/"
-            + str(MPAN)
+            + str(self.mpan)
             + "/meters/"
-            + str(SERIAL)
+            + str(self.serial)
             + "/consumption/"
         )
-        agile_cost_url = (
+        self.agile_cost_url = (
             "https://api.octopus.energy/v1/products/"
             + "AGILE-18-02-21/electricity-tariffs/E-1R-AGILE-18-02-21-"
-            + str(region).upper()
+            + str(self.region)
             + "/standard-unit-rates/"
         )
-
-        if gas:
-            gas_consumption_url = (
-                "https://api.octopus.energy/"
-                + "v1/gas-meter-points/"
-                + str(MPRN)
-                + "/meters/"
-                + str(GASSERIAL)
-                + "/consumption/"
-            )
-            gas_cost_url = (
-                "https://api.octopus.energy/v1/products/"
-                + gas_tariff
-                + "/gas-tariffs/G-1R-"
-                + gas_tariff
-                + "-"
-                + str(region).upper()
-                + "/standard-unit-rates/"
-            )
+        self.gas_consumption_url = (
+            "https://api.octopus.energy/"
+            + "v1/gas-meter-points/"
+            + str(self.mprn)
+            + "/meters/"
+            + str(self.gas_serial)
+            + "/consumption/"
+        )
+        self.gas_cost_url = (
+            "https://api.octopus.energy/v1/products/"
+            + self.gas_tariff
+            + "/gas-tariffs/G-1R-"
+            + self.gas_tariff
+            + "-"
+            + str(self.region)
+            + "/standard-unit-rates/"
+        )
+        self.gas_std_chg_url = (
+            "https://api.octopus.energy/v1/products/"
+            + self.gas_tariff
+            + "/gas-tariffs/G-1R-"
+            + self.gas_tariff
+            + "-"
+            + str(self.region)
+            + "/standing-charges/"
+        )
+        # Assumes gas and comparison leccy are on same tariff
+        self.fixed_cost_url = (
+            "https://api.octopus.energy/v1/products/"
+            + self.gas_tariff
+            + "/electricity-tariffs/E-1R-"
+            + self.gas_tariff
+            + "-"
+            + str(self.region)
+            + "/standard-unit-rates/"
+        )
+        self.fixed_std_chg_url = (
+            "https://api.octopus.energy/v1/products/"
+            + self.gas_tariff
+            + "/electricity-tariffs/E-1R-"
+            + self.gas_tariff
+            + "-"
+            + str(self.region)
+            + "/standard-charges/"
+        )
 
         self.run_in(
             self.cost_and_usage_callback,
             5,
-            use=elec_consumption_url,
-            cost=agile_cost_url,
-            date=elec_start_date,
+            use=self.elec_consumption_url,
+            cost=self.agile_cost_url,
+            date=self.elec_start_date,
         )
-        if gas:
+        if self.gas:
             self.run_in(
                 self.cost_and_usage_callback,
                 65,
-                use=gas_consumption_url,
-                cost=gas_cost_url,
-                date=gas_start_date,
+                use=self.gas_consumption_url,
+                cost=self.gas_cost_url,
+                date=self.gas_start_date,
                 gas=True,
             )
 
@@ -71,20 +104,20 @@ class OctoCost(hass.Hass):
             self.run_daily(
                 self.cost_and_usage_callback,
                 datetime.time(hour, 5, 0),
-                use=elec_consumption_url,
-                cost=agile_cost_url,
-                date=elec_start_date,
+                use=self.elec_consumption_url,
+                cost=self.agile_cost_url,
+                date=self.elec_start_date,
             )
 
-            if gas:
+            if self.gas:
                 self.run_daily(
                     self.cost_and_usage_callback,
                     datetime.time(hour, 7, 0),
-                    use=gas_consumption_url,
-                    cost=gas_cost_url,
-                    date=gas_start_date,
+                    use=self.gas_consumption_url,
+                    cost=self.gas_cost_url,
+                    date=self.gas_start_date,
                     gas=True,
-                    gasprice=gas_std_chg_url,
+                    gas_price=self.gas_std_chg_url,
                 )
 
     @classmethod
@@ -95,11 +128,13 @@ class OctoCost(hass.Hass):
         region = str(json_meter_details["gsp"][-1])
         return region
 
-    def cost_and_usage_callback(self, kwargs):
-        self.useurl = kwargs.get("use")
+    def cost_and_usage_callback(self, **kwargs):
+        self.use_url = kwargs.get("use")
         self.agile_cost_url = kwargs.get("cost")
         self.startdate = kwargs.get("date")
         self.gas = kwargs.get("gas", False)
+        #if self.gas:
+        #    self.gas_price_url = kwargs.get("gas_price")
         today = datetime.date.today()
         self.yesterday = today - datetime.timedelta(days=1)
         startyear = datetime.date(today.year, 1, 1)
@@ -190,25 +225,25 @@ class OctoCost(hass.Hass):
         numberdays = numberdays.days
         return ((numberdays + 1) * 48) - 1
 
+    # TODO: this doesn't include standing charges
     def calculate_cost_and_usage(self, start):
-        self.calculate_count(start=start)
+        expected_count = self.calculate_count(start=start)
         self.log("period_from: {}T00:00:00Z".format(start.isoformat()), level="DEBUG")
-        self.log(
-            "period_to: {}T23:59:59Z".format(self.yesterday.isoformat()), level="DEBUG"
-        )
-        rconsumption = requests.get(
-            url=self.useurl
+        self.log("period_to: {}T23:59:59Z".format(self.yesterday.isoformat()), level="DEBUG")
+
+        consump_resp = requests.get(
+            url=self.use_url
             + "?order_by=period&period_from="
             + start.isoformat()
             + "T00:00:00Z&period_to="
             + self.yesterday.isoformat()
             + "T23:59:59Z&page_size="
-            + str(self.expectedcount),
+            + str(expected_count),
             auth=(self.auth, ""),
         )
 
-        rcost = requests.get(
-            url=self.costurl
+        agile_cost_resp = requests.get(
+            url=self.agile_cost_url
             + "?period_from="
             + start.isoformat()
             + "T00:00:00Z&period_to="
@@ -216,35 +251,47 @@ class OctoCost(hass.Hass):
             + "T23:59:59Z"
         )
 
-        if rconsumption.status_code != 200:
+        #rgasprice = requests.get(
+        #    url=self.gas_price_url
+        #    + "?period_from="
+        #    + start.isoformat()
+        #    + "T00:00:00Z&period_to="
+        #    + self.yesterday.isoformat()
+        #    + "T23:59:59Z"
+        #)
+
+        if consump_resp.status_code != 200:
             self.log(
                 "Error {} getting consumption data: {}".format(
-                    rconsumption.status_code, rconsumption.text
+                    consump_resp.status_code, consump_resp.text
                 ),
                 level="ERROR",
             )
-        if rcost.status_code != 200:
+        if agile_cost_resp.status_code != 200:
             self.log(
-                "Error {} getting cost data: {}".format(rcost.status_code, rcost.text),
+                "Error {} getting cost data: {}".format(agile_cost_resp.status_code, agile_cost_resp.text),
                 level="ERROR",
             )
 
-        jconsumption = json.loads(rconsumption.text)
-        jcost = json.loads(rcost.text)
+        consump_json = json.loads(consump_resp.text)
+        agile_cost_json = json.loads(agile_cost_resp.text)
 
         usage = 0
         price = 0
         cost = []
         utc = pytz.timezone("UTC")
 
-        results = jconsumption[u"results"]
+        results = consump_json[u"results"]
 
-        while jcost[u"next"]:
-            cost.extend(jcost[u"results"])
-            rcost = requests.get(url=jcost[u"next"])
-            jcost = json.loads(rcost.text)
+        #if rgasprice.status_code == 200:
+        #    price = results[0][u"value_inc_vat"]
 
-        cost.extend(jcost[u"results"])
+        while agile_cost_json[u"next"]:
+            cost.extend(agile_cost_json[u"results"])
+            agile_cost_resp = requests.get(url=agile_cost_json[u"next"])
+            agile_cost_json = json.loads(agile_cost_resp.text)
+
+        cost.extend(agile_cost_json[u"results"])
         cost.reverse()
 
         for period in results:
@@ -284,11 +331,11 @@ class OctoCost(hass.Hass):
                 )
             else:
                 # Only dealing with gas price which doesn't vary at the moment
-                if jcost["count"] == 1:
-                    cost = jcost["results"][0][u"value_inc_vat"]
-                    price = price + cost * (results[curridx][u"consumption"])
+                if agile_cost_json["count"] == 1:
+                    cost = agile_cost_json["results"][0][u"value_inc_vat"]
+                    price = price + (cost * results[curridx][u"consumption"])
                 else:
                     self.log("Error: can only process fixed price gas", level="ERROR")
                     price = 0
 
-        return usage, price
+        return round(usage, 3), round(price, 2)
