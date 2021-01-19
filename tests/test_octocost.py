@@ -41,6 +41,7 @@ def test_calculate_cost_and_usage(octocost: OctoCost):
     start_day = datetime.date(2021, 1, 18)
 
     usage, cost = octocost.calculate_cost_and_usage(start_day)
-    assert usage == 7.701
-    assert cost == 108.6
+    assert usage == 7.700999999999998
+    assert cost == 108.60350550000001
+
 

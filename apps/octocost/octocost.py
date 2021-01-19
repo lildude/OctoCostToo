@@ -338,4 +338,4 @@ class OctoCost(hass.Hass):
                     self.log("Error: can only process fixed price gas", level="ERROR")
                     price = 0
 
-        return round(usage, 3), round(price, 2)
+        return usage, price
