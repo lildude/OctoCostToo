@@ -10,15 +10,9 @@ from appdaemon.plugins.hass import hassapi as hass
 class OctoCost(hass.Hass):
     def initialize(self):
         self.auth = self.args["auth"]
-        MPAN = self.args["mpan"]
-        SERIAL = self.args["serial"]
-        region = self.args.get("region", self.find_region(MPAN))
-        gas = self.args.get("gas", None)
-        if gas:
-            gas_tariff = gas.get("gas_tariff", None)
-            MPRN = gas.get("mprn", None)
-            GASSERIAL = gas.get("gasserial", None)
-            gas_start_date = datetime.date.fromisoformat(str(gas.get("gas_startdate")))
+        # We probably shouldn't be making API calls when initialising
+        #self.region = self.args.get("region", self.find_region(self.mpan))
+        self.region = self.args["region"].upper()
 
         elec_start_date = datetime.date.fromisoformat(str(self.args["startdate"]))
 
