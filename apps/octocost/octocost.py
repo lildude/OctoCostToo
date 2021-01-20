@@ -130,7 +130,7 @@ class OctoCost(hass.Hass):
 
     def cost_and_usage_callback(self, **kwargs):
         self.use_url = kwargs.get("use")
-        self.agile_cost_url = kwargs.get("cost")
+        self.cost_url = kwargs.get("cost")
         self.startdate = kwargs.get("date")
         self.gas = kwargs.get("gas", False)
         #if self.gas:
@@ -243,7 +243,7 @@ class OctoCost(hass.Hass):
         )
 
         agile_cost_resp = requests.get(
-            url=self.agile_cost_url
+            url=self.cost_url
             + "?period_from="
             + start.isoformat()
             + "T00:00:00Z&period_to="

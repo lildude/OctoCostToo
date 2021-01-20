@@ -37,6 +37,7 @@ def test_calculate_count(octocost: OctoCost):
 def test_calculate_cost_and_usage(octocost: OctoCost):
     octocost.yesterday = datetime.date(2021, 1, 18)
     octocost.use_url = octocost.elec_consumption_url
+    octocost.cost_url = octocost.agile_cost_url
     octocost.gas = False
     start_day = datetime.date(2021, 1, 18)
 
