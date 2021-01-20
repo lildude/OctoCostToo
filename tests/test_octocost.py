@@ -13,6 +13,12 @@ import json
     "region": "H",
     "serial": "67890",
     "start_date": "2020-12-27",
+    "gas": {
+      "mprn": "54321",
+      "gas_serial": "98765",
+      "gas_tariff": "FIX-12M-20-09-21",
+      "gas_start_date": "2020-12-27"
+    },
   },
   initialize=True
 )
@@ -33,8 +39,11 @@ def test_calculate_count(octocost: OctoCost):
     # Two day's worth of 30 minute windows between start and end of the same day
     assert 95 == octocost.calculate_count(start_day)
 
-@pytest.mark.usefixtures("mock_elec_consumption_one_day", "mock_elec_agile_cost_one_day")
-def test_calculate_cost_and_usage(octocost: OctoCost):
+@pytest.mark.usefixtures(
+    "mock_elec_consumption_one_day",
+    "mock_elec_agile_cost_one_day"
+)
+def test_calculate_cost_and_usage_agile_elec_only(octocost: OctoCost):
     octocost.yesterday = datetime.date(2021, 1, 18)
     octocost.use_url = octocost.elec_consumption_url
     octocost.cost_url = octocost.agile_cost_url
@@ -45,4 +54,19 @@ def test_calculate_cost_and_usage(octocost: OctoCost):
     assert usage == 7.700999999999998
     assert cost == 108.60350550000001
 
+@pytest.mark.usefixtures(
+    "mock_gas_consumption_one_day",
+    "mock_gas_rates",
+)
+def test_calculate_cost_and_usage_standard_unit_rate_gas_only(octocost: OctoCost):
+    octocost.yesterday = datetime.date(2021, 1, 18)
+    octocost.use_url = octocost.gas_consumption_url
+    octocost.cost_url = octocost.gas_cost_url
+    octocost.gas_price_url = octocost.gas_std_chg_url
+    octocost.gas = True
+    start_day = datetime.date(2021, 1, 18)
+
+    usage, cost = octocost.calculate_cost_and_usage(start_day)
+    assert usage == 7.700999999999998
+    assert cost == 38.3077065       # TODO: Double check this figue
 

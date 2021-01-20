@@ -133,8 +133,8 @@ class OctoCost(hass.Hass):
         self.cost_url = kwargs.get("cost")
         self.startdate = kwargs.get("date")
         self.gas = kwargs.get("gas", False)
-        #if self.gas:
-        #    self.gas_price_url = kwargs.get("gas_price")
+        if self.gas:
+            self.gas_price_url = kwargs.get("gas_price")
         today = datetime.date.today()
         self.yesterday = today - datetime.timedelta(days=1)
         startyear = datetime.date(today.year, 1, 1)
@@ -227,6 +227,10 @@ class OctoCost(hass.Hass):
 
     # TODO: this doesn't include standing charges
     def calculate_cost_and_usage(self, start):
+        usage = 0
+        price = 0
+        cost = []
+        utc = pytz.timezone("UTC")
         expected_count = self.calculate_count(start=start)
         self.log("period_from: {}T00:00:00Z".format(start.isoformat()), level="DEBUG")
         self.log("period_to: {}T23:59:59Z".format(self.yesterday.isoformat()), level="DEBUG")
@@ -251,15 +255,6 @@ class OctoCost(hass.Hass):
             + "T23:59:59Z"
         )
 
-        #rgasprice = requests.get(
-        #    url=self.gas_price_url
-        #    + "?period_from="
-        #    + start.isoformat()
-        #    + "T00:00:00Z&period_to="
-        #    + self.yesterday.isoformat()
-        #    + "T23:59:59Z"
-        #)
-
         if consump_resp.status_code != 200:
             self.log(
                 "Error {} getting consumption data: {}".format(
@@ -273,18 +268,28 @@ class OctoCost(hass.Hass):
                 level="ERROR",
             )
 
+        if self.gas:
+            standing_chg_resp = requests.get(
+                url=self.gas_price_url
+                + "?period_from="
+                + start.isoformat()
+                + "T00:00:00Z&period_to="
+                + self.yesterday.isoformat()
+                + "T23:59:59Z"
+            )
+            if standing_chg_resp.status_code != 200:
+                self.log(
+                    "Error {} getting standing charge data: {}".format(standing_chg_resp.status_code, standing_chg_resp.text),
+                    level="ERROR",
+                )
+            else:
+                standing_chg_json = json.loads(standing_chg_resp.text)
+                price = standing_chg_json[u"results"][0][u"value_inc_vat"]
+
         consump_json = json.loads(consump_resp.text)
         cost_json = json.loads(cost_resp.text)
 
-        usage = 0
-        price = 0
-        cost = []
-        utc = pytz.timezone("UTC")
-
         results = consump_json[u"results"]
-
-        #if rgasprice.status_code == 200:
-        #    price = results[0][u"value_inc_vat"]
 
         while cost_json[u"next"]:
             cost.extend(cost_json[u"results"])
