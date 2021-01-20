@@ -297,7 +297,15 @@ class OctoCost(hass.Hass):
         for period in results:
             curridx = results.index(period)
             usage = usage + (results[curridx][u"consumption"])
-            if not self.gas:
+            if self.gas:
+                # Only dealing with gas price which doesn't vary at the moment
+                if cost_json["count"] == 1:
+                    cost = cost_json["results"][0][u"value_inc_vat"]
+                    price = price + (cost * results[curridx][u"consumption"])
+                else:
+                    self.log("Error: can only process fixed price gas", level="ERROR")
+                    price = 0
+            else:
                 if (results[curridx][u"interval_start"]) != (
                     cost[curridx][u"valid_from"]
                 ):
@@ -329,13 +337,5 @@ class OctoCost(hass.Hass):
                     (cost[curridx][u"value_inc_vat"])
                     * (results[curridx][u"consumption"])
                 )
-            else:
-                # Only dealing with gas price which doesn't vary at the moment
-                if cost_json["count"] == 1:
-                    cost = cost_json["results"][0][u"value_inc_vat"]
-                    price = price + (cost * results[curridx][u"consumption"])
-                else:
-                    self.log("Error: can only process fixed price gas", level="ERROR")
-                    price = 0
 
         return usage, price
