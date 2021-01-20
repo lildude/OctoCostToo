@@ -1,9 +1,12 @@
-# octocost
-[![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg)](https://github.com/custom-components/hacs)
+# OctoCost
 
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/ddb8c55ca28342cbacc4f138bc7263a7)](https://www.codacy.com/manual/badguy99/octocost?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=badguy99/octocost&amp;utm_campaign=Badge_Grade)
+🚧 WIP: I'm in the process of improving this fork of the original source now it has been archived to keep it alive and to make it more useful and reliable.
 
-If you think this will be useful to you, please consider signing up to Octopus Energy with my referral code: https://share.octopus.energy/dense-ape-125 - You'll get £50 credit too!
+Please consider signing up to Octopus Energy with my referral code: <https://share.octopus.energy/mauve-ash-375> to give you and me £50 credit in the mean time.
+
+Want to motivate me to improve this quicker? [Sponsor me](https://github.com/sponsors/lildude) to work on it 😉 💖
+
+---
 
 ## Summary
 
