@@ -1,0 +1,13 @@
+{
+  "count": 1,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "value_exc_vat": 2.53,
+      "value_inc_vat": 2.6565,
+      "valid_from": null,
+      "valid_to": null
+    }
+  ]
+}
