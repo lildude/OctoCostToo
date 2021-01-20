@@ -30,7 +30,7 @@ def fixture_mock_elec_consumption_one_day(requests_mock):
   """
   requests_mock.get(
     "https://api.octopus.energy/v1/electricity-meter-points/12345/meters/67890/consumption/?order_by=period&period_from=2021-01-18T00:00:00Z&period_to=2021-01-18T23:59:59Z&page_size=47",
-    text= open("tests/fixtures/one-day-usage.json", "r").read()
+    text= open("tests/fixtures/elec-one-day-usage.json", "r").read()
   )
 
 @pytest.fixture(name="mock_elec_agile_cost_one_day")
