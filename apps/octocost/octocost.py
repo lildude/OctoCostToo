@@ -242,7 +242,7 @@ class OctoCost(hass.Hass):
             auth=(self.auth, ""),
         )
 
-        agile_cost_resp = requests.get(
+        cost_resp = requests.get(
             url=self.cost_url
             + "?period_from="
             + start.isoformat()
@@ -267,14 +267,14 @@ class OctoCost(hass.Hass):
                 ),
                 level="ERROR",
             )
-        if agile_cost_resp.status_code != 200:
+        if cost_resp.status_code != 200:
             self.log(
-                "Error {} getting cost data: {}".format(agile_cost_resp.status_code, agile_cost_resp.text),
+                "Error {} getting cost data: {}".format(cost_resp.status_code, cost_resp.text),
                 level="ERROR",
             )
 
         consump_json = json.loads(consump_resp.text)
-        agile_cost_json = json.loads(agile_cost_resp.text)
+        cost_json = json.loads(cost_resp.text)
 
         usage = 0
         price = 0
@@ -286,12 +286,12 @@ class OctoCost(hass.Hass):
         #if rgasprice.status_code == 200:
         #    price = results[0][u"value_inc_vat"]
 
-        while agile_cost_json[u"next"]:
-            cost.extend(agile_cost_json[u"results"])
-            agile_cost_resp = requests.get(url=agile_cost_json[u"next"])
-            agile_cost_json = json.loads(agile_cost_resp.text)
+        while cost_json[u"next"]:
+            cost.extend(cost_json[u"results"])
+            cost_resp = requests.get(url=cost_json[u"next"])
+            cost_json = json.loads(cost_resp.text)
 
-        cost.extend(agile_cost_json[u"results"])
+        cost.extend(cost_json[u"results"])
         cost.reverse()
 
         for period in results:
@@ -331,8 +331,8 @@ class OctoCost(hass.Hass):
                 )
             else:
                 # Only dealing with gas price which doesn't vary at the moment
-                if agile_cost_json["count"] == 1:
-                    cost = agile_cost_json["results"][0][u"value_inc_vat"]
+                if cost_json["count"] == 1:
+                    cost = cost_json["results"][0][u"value_inc_vat"]
                     price = price + (cost * results[curridx][u"consumption"])
                 else:
                     self.log("Error: can only process fixed price gas", level="ERROR")
