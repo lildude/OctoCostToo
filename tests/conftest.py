@@ -43,6 +43,20 @@ def fixture_mock_elec_agile_cost_one_day(requests_mock):
     text= open("tests/fixtures/agile-cost-one-day.json", "r").read()
   )
 
+@pytest.fixture(name="mock_elec_fixed_rates")
+def fixture_mock_elec_fixed_rates(requests_mock):
+  """
+  Mock response for electricity standard unit rates & standing charge
+  """
+  requests_mock.get(
+    "https://api.octopus.energy/v1/products/FIX-12M-20-09-21/electricity-tariffs/E-1R-FIX-12M-20-09-21-H/standard-unit-rates/?period_from=2021-01-18T00:00:00Z&period_to=2021-01-18T23:59:59Z",
+    text= open("tests/fixtures/elec-standard-rate.json", "r").read()
+  )
+  requests_mock.get(
+    "https://api.octopus.energy/v1/products/FIX-12M-20-09-21/electricity-tariffs/E-1R-FIX-12M-20-09-21-H/standing-charges/?period_from=2021-01-18T00:00:00Z&period_to=2021-01-18T23:59:59Z",
+    text= open("tests/fixtures/elec-standing-charges.json", "r").read()
+  )
+
 @pytest.fixture(name="mock_gas_consumption_one_day")
 def fixture_mock_gas_consumption_one_day(requests_mock):
   """
