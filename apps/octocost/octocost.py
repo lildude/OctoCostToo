@@ -132,9 +132,6 @@ class OctoCost(hass.Hass):
         self.use_url = kwargs.get("use")
         self.cost_url = kwargs.get("cost")
         self.startdate = kwargs.get("date")
-        self.gas = kwargs.get("gas", False)
-        if self.gas:
-            self.gas_price_url = kwargs.get("gas_price")
         today = datetime.date.today()
         self.yesterday = today - datetime.timedelta(days=1)
         startyear = datetime.date(today.year, 1, 1)
