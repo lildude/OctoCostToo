@@ -265,9 +265,16 @@ class OctoCost(hass.Hass):
                 level="ERROR",
             )
 
-        if self.gas:
+        # If cost_url contains `-1R-FIX-`, assume it's a fixed rate and get the standing charge too.
+        # Applies to fixed rate gas and fixed rate electricity
+        if "-1R-FIX-" in self.cost_url:
+            if "gas-tariffs" in self.cost_url:
+                std_chg_url = self.gas_std_chg_url
+            else:
+                std_chg_url = self.elec_std_chg_url
+
             standing_chg_resp = requests.get(
-                url=self.gas_price_url
+                url=std_chg_url
                 + "?period_from="
                 + start.isoformat()
                 + "T00:00:00Z&period_to="
@@ -299,19 +306,21 @@ class OctoCost(hass.Hass):
         for period in results:
             curridx = results.index(period)
             usage = usage + (results[curridx][u"consumption"])
-            if self.gas:
+            if "-1R-FIX-" in self.cost_url:
                 # Only dealing with gas price which doesn't vary at the moment
                 if cost_json["count"] == 1:
                     cost = cost_json["results"][0][u"value_inc_vat"]
-                    # Convert consumption from m3 to kWh when calculating the cost
-                    price = price + (cost * results[curridx][u"consumption"] * 11.1868)
+                    kwh = results[curridx][u"consumption"]
+                    # Convert consumption from m3 to kWh for gas
+                    if "gas-tariffs" in self.cost_url:
+                        kwh = kwh * 11.1868
+
+                    price = price + (cost * kwh)
                 else:
                     self.log("Error: can only process fixed price gas", level="ERROR")
                     price = 0
             else:
-                if (results[curridx][u"interval_start"]) != (
-                    cost[curridx][u"valid_from"]
-                ):
+                if (results[curridx][u"interval_start"]) != (cost[curridx][u"valid_from"]):
                     # Daylight Savings?
                     consumption_date = results[curridx][u"interval_start"]
                     if consumption_date.endswith("+01:00"):
