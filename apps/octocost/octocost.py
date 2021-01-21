@@ -13,7 +13,7 @@ class OctoCost(hass.Hass):
         self.mpan = self.args["mpan"]
         self.serial = self.args["serial"]
         # We probably shouldn't be making API calls when initialising
-        #self.region = self.args.get("region", self.find_region(self.mpan))
+        # self.region = self.args.get("region", self.find_region(self.mpan))
         self.region = self.args["region"].upper()
         self.elec_start_date = datetime.date.fromisoformat(str(self.args["start_date"]))
         self.gas = self.args.get("gas", None)
@@ -21,7 +21,9 @@ class OctoCost(hass.Hass):
             self.gas_tariff = self.gas.get("gas_tariff", None)
             self.mprn = self.gas.get("mprn", None)
             self.gas_serial = self.gas.get("gas_serial", None)
-            self.gas_start_date = datetime.date.fromisoformat(str(self.gas.get("gas_start_date")))
+            self.gas_start_date = datetime.date.fromisoformat(
+                str(self.gas.get("gas_start_date"))
+            )
 
         self.elec_consumption_url = (
             "https://api.octopus.energy/"
@@ -231,7 +233,9 @@ class OctoCost(hass.Hass):
         utc = pytz.timezone("UTC")
         expected_count = self.calculate_count(start=start)
         self.log("period_from: {}T00:00:00Z".format(start.isoformat()), level="DEBUG")
-        self.log("period_to: {}T23:59:59Z".format(self.yesterday.isoformat()), level="DEBUG")
+        self.log(
+            "period_to: {}T23:59:59Z".format(self.yesterday.isoformat()), level="DEBUG"
+        )
 
         consump_resp = requests.get(
             url=self.use_url
@@ -262,7 +266,9 @@ class OctoCost(hass.Hass):
             )
         if cost_resp.status_code != 200:
             self.log(
-                "Error {} getting cost data: {}".format(cost_resp.status_code, cost_resp.text),
+                "Error {} getting cost data: {}".format(
+                    cost_resp.status_code, cost_resp.text
+                ),
                 level="ERROR",
             )
 
@@ -284,12 +290,16 @@ class OctoCost(hass.Hass):
             )
             if standing_chg_resp.status_code != 200:
                 self.log(
-                    "Error {} getting standing charge data: {}".format(standing_chg_resp.status_code, standing_chg_resp.text),
+                    "Error {} getting standing charge data: {}".format(
+                        standing_chg_resp.status_code, standing_chg_resp.text
+                    ),
                     level="ERROR",
                 )
             else:
                 standing_chg_json = json.loads(standing_chg_resp.text)
-                std_chg = standing_chg_json[u"results"][0][u"value_inc_vat"] * ((self.yesterday - start).days + 1)
+                std_chg = standing_chg_json[u"results"][0][u"value_inc_vat"] * (
+                    (self.yesterday - start).days + 1
+                )
 
         consump_json = json.loads(consump_resp.text)
         cost_json = json.loads(cost_resp.text)
@@ -321,7 +331,9 @@ class OctoCost(hass.Hass):
                     self.log("Error: can only process fixed price gas", level="ERROR")
                     price = 0
             else:
-                if (results[curridx][u"interval_start"]) != (cost[curridx][u"valid_from"]):
+                if (results[curridx][u"interval_start"]) != (
+                    cost[curridx][u"valid_from"]
+                ):
                     # Daylight Savings?
                     consumption_date = results[curridx][u"interval_start"]
                     if consumption_date.endswith("+01:00"):
