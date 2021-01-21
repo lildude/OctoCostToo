@@ -64,7 +64,7 @@ class OctoCost(hass.Hass):
             + "/standing-charges/"
         )
         # Assumes gas and comparison leccy are on same tariff
-        self.fixed_cost_url = (
+        self.elec_cost_url = (
             "https://api.octopus.energy/v1/products/"
             + self.gas_tariff
             + "/electricity-tariffs/E-1R-"
@@ -73,14 +73,14 @@ class OctoCost(hass.Hass):
             + str(self.region)
             + "/standard-unit-rates/"
         )
-        self.fixed_std_chg_url = (
+        self.elec_std_chg_url = (
             "https://api.octopus.energy/v1/products/"
             + self.gas_tariff
             + "/electricity-tariffs/E-1R-"
             + self.gas_tariff
             + "-"
             + str(self.region)
-            + "/standard-charges/"
+            + "/standing-charges/"
         )
 
         self.run_in(
