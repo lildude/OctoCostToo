@@ -50,8 +50,8 @@ def test_calculate_cost_and_usage_agile_elec_only(octocost: OctoCost):
     start_day = datetime.date(2021, 1, 18)
 
     usage, cost = octocost.calculate_cost_and_usage(start_day)
-    assert usage == 7.700999999999998
-    assert cost == 108.60350550000001
+    assert usage == 7.701
+    assert cost == 108.6035
 
 @pytest.mark.usefixtures(
     "mock_gas_consumption_one_day",
@@ -64,8 +64,8 @@ def test_calculate_cost_and_usage_standard_unit_rate_gas_only(octocost: OctoCost
     start_day = datetime.date(2021, 1, 18)
 
     usage, cost = octocost.calculate_cost_and_usage(start_day)
-    assert usage == 7.700999999999998
-    assert cost == 246.70627107419998  # Should be (7.700999999999998 * 11.1868 * 2.6565) + 17.85
+    assert usage == 7.701
+    assert cost == 246.7063  # Should be (7.701 * 11.1868 * 2.6565) + 17.85
 
 @pytest.mark.usefixtures(
     "mock_elec_consumption_one_day",
@@ -78,7 +78,8 @@ def test_calculate_cost_and_usage_standard_unit_rate_elec_only(octocost: OctoCos
     start_day = datetime.date(2021, 1, 18)
 
     usage, cost = octocost.calculate_cost_and_usage(start_day)
-    assert usage == 7.700999999999998
-    assert cost == 143.5037625  # Should be (7.700999999999998 * 16.0125) + 20.1915
+    assert usage == 7.701
+    assert cost == 143.5038  # Should be (7.701 * 16.0125) + 20.1915
+
 
 

@@ -226,6 +226,7 @@ class OctoCost(hass.Hass):
     def calculate_cost_and_usage(self, start):
         usage = 0
         price = 0
+        std_chg = 0
         cost = []
         utc = pytz.timezone("UTC")
         expected_count = self.calculate_count(start=start)
@@ -288,7 +289,7 @@ class OctoCost(hass.Hass):
                 )
             else:
                 standing_chg_json = json.loads(standing_chg_resp.text)
-                price = standing_chg_json[u"results"][0][u"value_inc_vat"]
+                std_chg = standing_chg_json[u"results"][0][u"value_inc_vat"] * ((self.yesterday - start).days + 1)
 
         consump_json = json.loads(consump_resp.text)
         cost_json = json.loads(cost_resp.text)
@@ -350,4 +351,5 @@ class OctoCost(hass.Hass):
                     * (results[curridx][u"consumption"])
                 )
 
-        return usage, price
+        # We round because floating point arithmatic leads to some crazy looking figures
+        return round(usage, 3), round((price + std_chg), 4)
