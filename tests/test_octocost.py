@@ -81,5 +81,18 @@ def test_calculate_cost_and_usage_standard_unit_rate_elec_only(octocost: OctoCos
     assert usage == 7.701
     assert cost == 143.5038  # Should be (7.701 * 16.0125) + 20.1915
 
+@pytest.mark.usefixtures(
+    "mock_elec_consumption_five_days"
+)
+def test_calculate_cost_and_usage_standard_unit_rate_elec_only_five_days(octocost: OctoCost):
+    octocost.yesterday = datetime.date(2021, 1, 18)
+    octocost.use_url = octocost.elec_consumption_url
+    octocost.cost_url = octocost.elec_cost_url
+    start_day = datetime.date(2021, 1, 14)
+
+    usage, cost = octocost.calculate_cost_and_usage(start_day)
+    assert usage == 41.168
+    assert cost == 760.1601  # Should be (41.168 * 16.0125) + (20.1915 * 5)
+
 
 

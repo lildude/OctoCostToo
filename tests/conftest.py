@@ -80,3 +80,21 @@ def fixture_mock_gas_rates(requests_mock):
     "https://api.octopus.energy/v1/products/FIX-12M-20-09-21/gas-tariffs/G-1R-FIX-12M-20-09-21-H/standing-charges/?period_from=2021-01-18T00:00:00Z&period_to=2021-01-18T23:59:59Z",
     text= open("tests/fixtures/gas-standing-charges.json", "r").read()
   )
+
+@pytest.fixture(name="mock_elec_consumption_five_days")
+def fixture_mock_elec_consumption_five_days(requests_mock):
+  """
+  Mock responses for five days' electricity usage
+  """
+  requests_mock.get(
+    "https://api.octopus.energy/v1/electricity-meter-points/12345/meters/67890/consumption/?order_by=period&period_from=2021-01-14T00:00:00Z&period_to=2021-01-18T23:59:59Z&page_size=239",
+    text= open("tests/fixtures/elec-five-day-usage.json", "r").read()
+  )
+  requests_mock.get(
+    "https://api.octopus.energy/v1/products/FIX-12M-20-09-21/electricity-tariffs/E-1R-FIX-12M-20-09-21-H/standard-unit-rates/?period_from=2021-01-14T00:00:00Z&period_to=2021-01-18T23:59:59Z",
+    text= open("tests/fixtures/elec-standard-rate.json", "r").read()
+  )
+  requests_mock.get(
+    "https://api.octopus.energy/v1/products/FIX-12M-20-09-21/electricity-tariffs/E-1R-FIX-12M-20-09-21-H/standing-charges/?period_from=2021-01-14T00:00:00Z&period_to=2021-01-18T23:59:59Z",
+    text= open("tests/fixtures/elec-standing-charges.json", "r").read()
+  )
