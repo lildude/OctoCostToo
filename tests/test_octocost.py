@@ -68,5 +68,6 @@ def test_calculate_cost_and_usage_standard_unit_rate_gas_only(octocost: OctoCost
 
     usage, cost = octocost.calculate_cost_and_usage(start_day)
     assert usage == 7.700999999999998
-    assert cost == 38.3077065       # TODO: Double check this figue
+    assert cost == 246.70627107419998  # Should be (7.700999999999998 * 11.1868 * 2.6565) + 17.85
+
 

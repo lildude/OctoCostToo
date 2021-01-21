@@ -306,7 +306,8 @@ class OctoCost(hass.Hass):
                 # Only dealing with gas price which doesn't vary at the moment
                 if cost_json["count"] == 1:
                     cost = cost_json["results"][0][u"value_inc_vat"]
-                    price = price + (cost * results[curridx][u"consumption"])
+                    # Convert consumption from m3 to kWh when calculating the cost
+                    price = price + (cost * results[curridx][u"consumption"] * 11.1868)
                 else:
                     self.log("Error: can only process fixed price gas", level="ERROR")
                     price = 0
