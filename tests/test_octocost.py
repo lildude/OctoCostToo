@@ -1,9 +1,10 @@
-from appdaemon_testing.pytest import automation_fixture
-from apps.octocost.octocost import OctoCost
-
-import pytest
 import datetime
 import json
+
+import pytest
+from appdaemon_testing.pytest import automation_fixture
+
+from apps.octocost.octocost import OctoCost
 
 
 @automation_fixture(
