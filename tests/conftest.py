@@ -4,6 +4,10 @@ import requests
 # Prevent accidental outgoing network requests - we should be mocking these
 @pytest.fixture(autouse=True)
 def no_http_requests(monkeypatch):
+    """
+    Prevent accidental HTTP requests during testing
+    """
+
     def urlopen_mock(self, method, url, *args, **kwargs):
         raise RuntimeError(
             f"The test was about to {method} {self.scheme}://{self.host}{url}"
