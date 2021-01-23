@@ -3,6 +3,7 @@ import json
 
 import pytest
 from appdaemon_testing.pytest import automation_fixture
+
 from apps.octocost.octocost import OctoCost
 
 
@@ -95,6 +96,3 @@ def test_calculate_cost_and_usage_standard_unit_rate_elec_only_five_days(
     usage, cost = octocost.calculate_cost_and_usage(start_day)
     assert usage == 41.168
     assert cost == 760.1601  # Should be (41.168 * 16.0125) + (20.1915 * 5)
-
-
-
