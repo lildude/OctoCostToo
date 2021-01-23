@@ -3,7 +3,6 @@ import json
 
 import pytest
 from appdaemon_testing.pytest import automation_fixture
-
 from apps.octocost.octocost import OctoCost
 
 

@@ -1,6 +1,7 @@
 import pytest
 import requests
 
+
 # Prevent accidental outgoing network requests - we should be mocking these
 @pytest.fixture(autouse=True)
 def no_http_requests(monkeypatch):
