@@ -8,6 +8,7 @@ from appdaemon.plugins.hass import hassapi as hass
 
 BASEURL = "https://api.octopus.energy/v1"
 
+
 class OctoCost(hass.Hass):
     def initialize(self):
         self.auth = self.args["auth"]
@@ -73,13 +74,13 @@ class OctoCost(hass.Hass):
         energy = kwargs.get("energy", "electricity")
         tariff = kwargs.get("tariff", "AGILE-18-02-21")
         units = kwargs.get("units", "standard-unit-rates")
-        url = f'{BASEURL}/products/{tariff}/{energy}-tariffs/{energy[0].upper()}-1R-{tariff}-{self.region}/{units}/'
+        url = f"{BASEURL}/products/{tariff}/{energy}-tariffs/{energy[0].upper()}-1R-{tariff}-{self.region}/{units}/"
         return url
 
-    def consumption_url(self, energy = "electricity"):
+    def consumption_url(self, energy="electricity"):
         meter_point = self.mprn if energy == "gas" else self.mpan
         serial = self.gas_serial if energy == "gas" else self.serial
-        url = f'{BASEURL}/{energy}-meter-points/{meter_point}/meters/{serial}/consumption/'
+        url = f"{BASEURL}/{energy}-meter-points/{meter_point}/meters/{serial}/consumption/"
         return url
 
     def cost_and_usage_callback(self, **kwargs):
@@ -228,9 +229,13 @@ class OctoCost(hass.Hass):
         # Applies to fixed rate gas and fixed rate electricity
         if "-1R-FIX-" in self.cost_url:
             if "gas-tariffs" in self.cost_url:
-                std_chg_url = self.tariff_url(energy="gas", tariff=self.gas_tariff, units="standing-charges")
+                std_chg_url = self.tariff_url(
+                    energy="gas", tariff=self.gas_tariff, units="standing-charges"
+                )
             else:
-                std_chg_url = self.tariff_url(tariff=self.gas_tariff, units="standing-charges")
+                std_chg_url = self.tariff_url(
+                    tariff=self.gas_tariff, units="standing-charges"
+                )
 
             standing_chg_resp = requests.get(
                 url=std_chg_url
@@ -249,31 +254,31 @@ class OctoCost(hass.Hass):
                 )
             else:
                 standing_chg_json = json.loads(standing_chg_resp.text)
-                std_chg = standing_chg_json[u"results"][0][u"value_inc_vat"] * (
+                std_chg = standing_chg_json["results"][0]["value_inc_vat"] * (
                     (self.yesterday - start).days + 1
                 )
 
         consump_json = json.loads(consump_resp.text)
         cost_json = json.loads(cost_resp.text)
 
-        results = consump_json[u"results"]
+        results = consump_json["results"]
 
-        while cost_json[u"next"]:
-            cost.extend(cost_json[u"results"])
-            cost_resp = requests.get(url=cost_json[u"next"])
+        while cost_json["next"]:
+            cost.extend(cost_json["results"])
+            cost_resp = requests.get(url=cost_json["next"])
             cost_json = json.loads(cost_resp.text)
 
-        cost.extend(cost_json[u"results"])
+        cost.extend(cost_json["results"])
         cost.reverse()
 
         for period in results:
             curridx = results.index(period)
-            usage = usage + (results[curridx][u"consumption"])
+            usage = usage + (results[curridx]["consumption"])
             if "-1R-FIX-" in self.cost_url:
                 # Only dealing with gas price which doesn't vary at the moment
                 if cost_json["count"] == 1:
-                    cost = cost_json["results"][0][u"value_inc_vat"]
-                    kwh = results[curridx][u"consumption"]
+                    cost = cost_json["results"][0]["value_inc_vat"]
+                    kwh = results[curridx]["consumption"]
                     # Convert consumption from m3 to kWh for gas
                     if "gas-tariffs" in self.cost_url:
                         kwh = kwh * 11.1868
@@ -283,36 +288,35 @@ class OctoCost(hass.Hass):
                     self.log("Error: can only process fixed price gas", level="ERROR")
                     price = 0
             else:
-                if (results[curridx][u"interval_start"]) != (
-                    cost[curridx][u"valid_from"]
+                if (results[curridx]["interval_start"]) != (
+                    cost[curridx]["valid_from"]
                 ):
                     # Daylight Savings?
-                    consumption_date = results[curridx][u"interval_start"]
+                    consumption_date = results[curridx]["interval_start"]
                     if consumption_date.endswith("+01:00"):
                         date_time = dateutil.parser.parse(consumption_date)
                         utc_datetime = date_time.astimezone(utc)
                         utc_iso = utc_datetime.isoformat().replace("+00:00", "Z")
-                        if utc_iso == (cost[curridx][u"valid_from"]):
-                            (results[curridx][u"interval_start"]) = utc_iso
+                        if utc_iso == (cost[curridx]["valid_from"]):
+                            (results[curridx]["interval_start"]) = utc_iso
                         else:
                             self.log(
                                 "UTC Unmatched consumption {}".format(
-                                    results[curridx][u"interval_start"]
+                                    results[curridx]["interval_start"]
                                 )
-                                + " / cost {}".format(cost[curridx][u"valid_from"]),
+                                + " / cost {}".format(cost[curridx]["valid_from"]),
                                 level="ERROR",
                             )
                     else:
                         self.log(
                             "Unmatched consumption {}".format(
-                                results[curridx][u"interval_start"]
+                                results[curridx]["interval_start"]
                             )
-                            + " / cost {}".format(cost[curridx][u"valid_from"]),
+                            + " / cost {}".format(cost[curridx]["valid_from"]),
                             level="ERROR",
                         )
                 price = price + (
-                    (cost[curridx][u"value_inc_vat"])
-                    * (results[curridx][u"consumption"])
+                    (cost[curridx]["value_inc_vat"]) * (results[curridx]["consumption"])
                 )
 
         # We round because floating point arithmatic leads to some crazy looking figures

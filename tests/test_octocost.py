@@ -3,6 +3,7 @@ import json
 
 import pytest
 from appdaemon_testing.pytest import automation_fixture
+
 from apps.octocost.octocost import OctoCost
 
 
@@ -41,19 +42,36 @@ def test_calculate_count(octocost: OctoCost):
     # Two day's worth of 30 minute windows between start and end of the same day
     assert 95 == octocost.calculate_count(start_day)
 
+
 def test_tariff_url(octocost: OctoCost):
     default_url = octocost.tariff_url()
-    gas_tariff_std_chg_url = octocost.tariff_url(energy="gas", tariff="FIX-12M-20-09-21", units="standing-charges")
+    gas_tariff_std_chg_url = octocost.tariff_url(
+        energy="gas", tariff="FIX-12M-20-09-21", units="standing-charges"
+    )
 
-    assert default_url == "https://api.octopus.energy/v1/products/AGILE-18-02-21/electricity-tariffs/E-1R-AGILE-18-02-21-H/standard-unit-rates/"
-    assert gas_tariff_std_chg_url == "https://api.octopus.energy/v1/products/FIX-12M-20-09-21/gas-tariffs/G-1R-FIX-12M-20-09-21-H/standing-charges/"
+    assert (
+        default_url
+        == "https://api.octopus.energy/v1/products/AGILE-18-02-21/electricity-tariffs/E-1R-AGILE-18-02-21-H/standard-unit-rates/"
+    )
+    assert (
+        gas_tariff_std_chg_url
+        == "https://api.octopus.energy/v1/products/FIX-12M-20-09-21/gas-tariffs/G-1R-FIX-12M-20-09-21-H/standing-charges/"
+    )
+
 
 def test_consumption_url(octocost: OctoCost):
     default_url = octocost.consumption_url()
     gas_consumption_url = octocost.consumption_url("gas")
 
-    assert default_url == "https://api.octopus.energy/v1/electricity-meter-points/12345/meters/67890/consumption/"
-    assert gas_consumption_url == "https://api.octopus.energy/v1/gas-meter-points/54321/meters/98765/consumption/"
+    assert (
+        default_url
+        == "https://api.octopus.energy/v1/electricity-meter-points/12345/meters/67890/consumption/"
+    )
+    assert (
+        gas_consumption_url
+        == "https://api.octopus.energy/v1/gas-meter-points/54321/meters/98765/consumption/"
+    )
+
 
 @pytest.mark.usefixtures(
     "mock_elec_consumption_one_day", "mock_elec_agile_cost_one_day"
