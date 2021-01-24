@@ -1,5 +1,6 @@
 import datetime
 import json
+from unittest.mock import Mock
 
 import pytest
 from appdaemon_testing.pytest import automation_fixture
@@ -165,10 +166,11 @@ def test_callbacks_run_daily(hass_driver, octocost: OctoCost):
     )
 
 
-@pytest.mark.usefixtures("mock_elec_consumption")
 @freeze_time("2021-01-19")
 def test_callback_sets_electricity_states(hass_driver, octocost: OctoCost):
     set_state = hass_driver.get_mock("set_state")
+    octocost.calculate_cost_and_usage = Mock(return_value=[7.7, 109.0])
+
     octocost.cost_and_usage_callback(
         use=octocost.consumption_url(),
         cost=octocost.tariff_url(),
@@ -207,10 +209,11 @@ def test_callback_sets_electricity_states(hass_driver, octocost: OctoCost):
     )
 
 
-@pytest.mark.usefixtures("mock_gas_consumption")
-@freeze_time("2021-01-19")
+@freeze_time("2020-12-19")
 def test_callback_sets_gas_states(hass_driver, octocost: OctoCost):
     set_state = hass_driver.get_mock("set_state")
+    octocost.calculate_cost_and_usage = Mock(return_value=[7.7, 150.8])
+
     octocost.cost_and_usage_callback(
         use=octocost.consumption_url("gas"),
         cost=octocost.tariff_url(energy="gas", tariff=octocost.gas_tariff),
@@ -224,7 +227,7 @@ def test_callback_sets_gas_states(hass_driver, octocost: OctoCost):
     )
     set_state.assert_any_call(
         "sensor.octopus_yearly_gas_cost",
-        state=5.5,
+        state=1.51,
         attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
     )
     set_state.assert_any_call(
@@ -234,17 +237,6 @@ def test_callback_sets_gas_states(hass_driver, octocost: OctoCost):
     )
     set_state.assert_any_call(
         "sensor.octopus_monthly_gas_cost",
-        state=5.5,
+        state=1.51,
         attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
     )
-    # TODO: I think we only get monthly gas usage
-    # set_state.assert_any_call(
-    #    "sensor.octopus_day_usage",
-    #    state=7.7,
-    #    attributes={"unit_of_measurement": "kWh", "icon": "mdi:flash"},
-    # )
-    # set_state.assert_any_call(
-    #    "sensor.octopus_day_cost",
-    #    state=1.09,
-    #    attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
-    # )
