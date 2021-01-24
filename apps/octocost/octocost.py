@@ -177,7 +177,6 @@ class OctoCost(hass.Hass):
         numberdays = numberdays.days
         return ((numberdays + 1) * 48) - 1
 
-    # TODO: this doesn't include standing charges
     def calculate_cost_and_usage(self, start):
         usage = 0
         price = 0
@@ -272,13 +271,13 @@ class OctoCost(hass.Hass):
         cost.reverse()
 
         for period in results:
-            curridx = results.index(period)
-            usage = usage + (results[curridx]["consumption"])
+            current_index = results.index(period)
+            usage = usage + (results[current_index]["consumption"])
             if "-1R-FIX-" in self.cost_url:
                 # Only dealing with gas price which doesn't vary at the moment
                 if cost_json["count"] == 1:
                     cost = cost_json["results"][0]["value_inc_vat"]
-                    kwh = results[curridx]["consumption"]
+                    kwh = results[current_index]["consumption"]
                     # Convert consumption from m3 to kWh for gas
                     if "gas-tariffs" in self.cost_url:
                         kwh = kwh * 11.1868
@@ -288,35 +287,35 @@ class OctoCost(hass.Hass):
                     self.log("Error: can only process fixed price gas", level="ERROR")
                     price = 0
             else:
-                if (results[curridx]["interval_start"]) != (
-                    cost[curridx]["valid_from"]
+                if (results[current_index]["interval_start"]) != (
+                    cost[current_index]["valid_from"]
                 ):
                     # Daylight Savings?
-                    consumption_date = results[curridx]["interval_start"]
+                    consumption_date = results[current_index]["interval_start"]
                     if consumption_date.endswith("+01:00"):
                         date_time = dateutil.parser.parse(consumption_date)
                         utc_datetime = date_time.astimezone(utc)
                         utc_iso = utc_datetime.isoformat().replace("+00:00", "Z")
-                        if utc_iso == (cost[curridx]["valid_from"]):
-                            (results[curridx]["interval_start"]) = utc_iso
+                        if utc_iso == (cost[current_index]["valid_from"]):
+                            (results[current_index]["interval_start"]) = utc_iso
                         else:
                             self.log(
                                 "UTC Unmatched consumption {}".format(
-                                    results[curridx]["interval_start"]
+                                    results[current_index]["interval_start"]
                                 )
-                                + " / cost {}".format(cost[curridx]["valid_from"]),
+                                + " / cost {}".format(cost[current_index]["valid_from"]),
                                 level="ERROR",
                             )
                     else:
                         self.log(
                             "Unmatched consumption {}".format(
-                                results[curridx]["interval_start"]
+                                results[current_index]["interval_start"]
                             )
-                            + " / cost {}".format(cost[curridx]["valid_from"]),
+                            + " / cost {}".format(cost[current_index]["valid_from"]),
                             level="ERROR",
                         )
                 price = price + (
-                    (cost[curridx]["value_inc_vat"]) * (results[curridx]["consumption"])
+                    (cost[current_index]["value_inc_vat"]) * (results[current_index]["consumption"])
                 )
 
         # We round because floating point arithmatic leads to some crazy looking figures
