@@ -303,7 +303,9 @@ class OctoCost(hass.Hass):
                                 "UTC Unmatched consumption {}".format(
                                     results[current_index]["interval_start"]
                                 )
-                                + " / cost {}".format(cost[current_index]["valid_from"]),
+                                + " / cost {}".format(
+                                    cost[current_index]["valid_from"]
+                                ),
                                 level="ERROR",
                             )
                     else:
@@ -315,7 +317,8 @@ class OctoCost(hass.Hass):
                             level="ERROR",
                         )
                 price = price + (
-                    (cost[current_index]["value_inc_vat"]) * (results[current_index]["consumption"])
+                    (cost[current_index]["value_inc_vat"])
+                    * (results[current_index]["consumption"])
                 )
 
         # We round because floating point arithmatic leads to some crazy looking figures
