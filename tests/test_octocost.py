@@ -3,6 +3,7 @@ import json
 
 import pytest
 from appdaemon_testing.pytest import automation_fixture
+from freezegun import freeze_time
 
 from apps.octocost.octocost import OctoCost
 
@@ -126,3 +127,124 @@ def test_calculate_cost_and_usage_standard_unit_rate_elec_only_five_days(
     usage, cost = octocost.calculate_cost_and_usage(start_day)
     assert usage == 41.168
     assert cost == 760.1601  # Should be (41.168 * 16.0125) + (20.1915 * 5)
+
+
+def test_callbacks_run_in(hass_driver, octocost: OctoCost):
+    run_in = hass_driver.get_mock("run_in")
+    run_in.assert_any_call(
+        octocost.cost_and_usage_callback,
+        65,
+        use="https://api.octopus.energy/v1/gas-meter-points/54321/meters/98765/consumption/",
+        cost="https://api.octopus.energy/v1/products/FIX-12M-20-09-21/gas-tariffs/G-1R-FIX-12M-20-09-21-H/standard-unit-rates/",
+        date=datetime.date(2020, 12, 27),
+    )
+    run_in.assert_any_call(
+        octocost.cost_and_usage_callback,
+        5,
+        use="https://api.octopus.energy/v1/electricity-meter-points/12345/meters/67890/consumption/",
+        cost="https://api.octopus.energy/v1/products/AGILE-18-02-21/electricity-tariffs/E-1R-AGILE-18-02-21-H/standard-unit-rates/",
+        date=datetime.date(2020, 12, 27),
+    )
+
+
+def test_callbacks_run_daily(hass_driver, octocost: OctoCost):
+    run_daily = hass_driver.get_mock("run_daily")
+    run_daily.assert_any_call(
+        octocost.cost_and_usage_callback,
+        datetime.time(0, 5),
+        use="https://api.octopus.energy/v1/electricity-meter-points/12345/meters/67890/consumption/",
+        cost="https://api.octopus.energy/v1/products/AGILE-18-02-21/electricity-tariffs/E-1R-AGILE-18-02-21-H/standard-unit-rates/",
+        date=datetime.date(2020, 12, 27),
+    )
+    run_daily.assert_any_call(
+        octocost.cost_and_usage_callback,
+        datetime.time(0, 7),
+        use="https://api.octopus.energy/v1/gas-meter-points/54321/meters/98765/consumption/",
+        cost="https://api.octopus.energy/v1/products/FIX-12M-20-09-21/gas-tariffs/G-1R-FIX-12M-20-09-21-H/standard-unit-rates/",
+        date=datetime.date(2020, 12, 27),
+    )
+
+
+@pytest.mark.usefixtures("mock_elec_consumption")
+@freeze_time("2021-01-19")
+def test_callback_sets_electricity_states(hass_driver, octocost: OctoCost):
+    set_state = hass_driver.get_mock("set_state")
+    octocost.cost_and_usage_callback(
+        use=octocost.consumption_url(),
+        cost=octocost.tariff_url(),
+        date=datetime.date(2020, 12, 27),
+    )
+
+    set_state.assert_any_call(
+        "sensor.octopus_yearly_usage",
+        state=7.7,
+        attributes={"unit_of_measurement": "kWh", "icon": "mdi:flash"},
+    )
+    set_state.assert_any_call(
+        "sensor.octopus_yearly_cost",
+        state=1.09,
+        attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
+    )
+    set_state.assert_any_call(
+        "sensor.octopus_monthly_usage",
+        state=7.7,
+        attributes={"unit_of_measurement": "kWh", "icon": "mdi:flash"},
+    )
+    set_state.assert_any_call(
+        "sensor.octopus_monthly_cost",
+        state=1.09,
+        attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
+    )
+    set_state.assert_any_call(
+        "sensor.octopus_day_usage",
+        state=7.7,
+        attributes={"unit_of_measurement": "kWh", "icon": "mdi:flash"},
+    )
+    set_state.assert_any_call(
+        "sensor.octopus_day_cost",
+        state=1.09,
+        attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
+    )
+
+
+@pytest.mark.usefixtures("mock_gas_consumption")
+@freeze_time("2021-01-19")
+def test_callback_sets_gas_states(hass_driver, octocost: OctoCost):
+    set_state = hass_driver.get_mock("set_state")
+    octocost.cost_and_usage_callback(
+        use=octocost.consumption_url("gas"),
+        cost=octocost.tariff_url(energy="gas", tariff=octocost.gas_tariff),
+        date=datetime.date(2020, 12, 27),
+    )
+
+    set_state.assert_any_call(
+        "sensor.octopus_yearly_gas_usage",
+        state=7.7,
+        attributes={"unit_of_measurement": "m3", "icon": "mdi:fire"},
+    )
+    set_state.assert_any_call(
+        "sensor.octopus_yearly_gas_cost",
+        state=5.5,
+        attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
+    )
+    set_state.assert_any_call(
+        "sensor.octopus_monthly_gas_usage",
+        state=7.7,
+        attributes={"unit_of_measurement": "m3", "icon": "mdi:fire"},
+    )
+    set_state.assert_any_call(
+        "sensor.octopus_monthly_gas_cost",
+        state=5.5,
+        attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
+    )
+    # TODO: I think we only get monthly gas usage
+    # set_state.assert_any_call(
+    #    "sensor.octopus_day_usage",
+    #    state=7.7,
+    #    attributes={"unit_of_measurement": "kWh", "icon": "mdi:flash"},
+    # )
+    # set_state.assert_any_call(
+    #    "sensor.octopus_day_cost",
+    #    state=1.09,
+    #    attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
+    # )

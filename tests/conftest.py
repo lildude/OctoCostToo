@@ -110,3 +110,58 @@ def fixture_mock_elec_consumption_five_days(requests_mock):
         "https://api.octopus.energy/v1/products/FIX-12M-20-09-21/electricity-tariffs/E-1R-FIX-12M-20-09-21-H/standing-charges/?period_from=2021-01-14T00:00:00Z&period_to=2021-01-18T23:59:59Z",
         text=open("tests/fixtures/elec-standing-charges.json", "r").read(),
     )
+
+
+# TODO: Make this dynamic
+@pytest.fixture(name="mock_elec_consumption")
+def fixture_mock_elec_consumption(requests_mock):
+    """
+    Mock responses for five days' electricity usage
+    """
+    requests_mock.get(
+        "https://api.octopus.energy/v1/electricity-meter-points/12345/meters/67890/consumption/?order_by=period&period_from=2021-01-18T00:00:00Z&period_to=2021-01-18T23:59:59Z&page_size=47",
+        text=open("tests/fixtures/elec-one-day-usage.json", "r").read(),
+    )
+    requests_mock.get(
+        "https://api.octopus.energy/v1/products/AGILE-18-02-21/electricity-tariffs/E-1R-AGILE-18-02-21-H/standard-unit-rates/?period_from=2021-01-18T00:00:00Z&period_to=2021-01-18T23:59:59Z",
+        text=open("tests/fixtures/agile-cost-one-day.json", "r").read(),
+    )
+    requests_mock.get(
+        "https://api.octopus.energy/v1/electricity-meter-points/12345/meters/67890/consumption/?order_by=period&period_from=2021-01-01T00:00:00Z&period_to=2021-01-18T23:59:59Z&page_size=863",
+        text=open("tests/fixtures/elec-one-day-usage.json", "r").read(),
+    )
+    requests_mock.get(
+        "https://api.octopus.energy/v1/products/AGILE-18-02-21/electricity-tariffs/E-1R-AGILE-18-02-21-H/standard-unit-rates/?period_from=2021-01-01T00:00:00Z&period_to=2021-01-18T23:59:59Z",
+        text=open("tests/fixtures/agile-cost-one-day.json", "r").read(),
+    )
+
+
+@pytest.fixture(name="mock_gas_consumption")
+def fixture_mock_gas_consumption(requests_mock):
+    """
+    Mock responses for five days' gas usage
+    """
+    requests_mock.get(
+        "https://api.octopus.energy/v1/gas-meter-points/54321/meters/98765/consumption/?order_by=period&period_from=2021-01-18T00:00:00Z&period_to=2021-01-18T23:59:59Z&page_size=47",
+        text=open("tests/fixtures/elec-one-day-usage.json", "r").read(),
+    )
+    requests_mock.get(
+        "https://api.octopus.energy/v1/gas-meter-points/54321/meters/98765/consumption/?order_by=period&period_from=2021-01-01T00:00:00Z&period_to=2021-01-18T23:59:59Z&page_size=863",
+        text=open("tests/fixtures/elec-one-day-usage.json", "r").read(),
+    )
+    requests_mock.get(
+        "https://api.octopus.energy/v1/products/FIX-12M-20-09-21/gas-tariffs/G-1R-FIX-12M-20-09-21-H/standard-unit-rates/?period_from=2021-01-18T00:00:00Z&period_to=2021-01-18T23:59:59Z",
+        text=open("tests/fixtures/gas-standard-rate.json", "r").read(),
+    )
+    requests_mock.get(
+        "https://api.octopus.energy/v1/products/FIX-12M-20-09-21/gas-tariffs/G-1R-FIX-12M-20-09-21-H/standing-charges/?period_from=2021-01-18T00:00:00Z&period_to=2021-01-18T23:59:59Z",
+        text=open("tests/fixtures/gas-standing-charges.json", "r").read(),
+    )
+    requests_mock.get(
+        "https://api.octopus.energy/v1/products/FIX-12M-20-09-21/gas-tariffs/G-1R-FIX-12M-20-09-21-H/standard-unit-rates/?period_from=2021-01-01T00:00:00Z&period_to=2021-01-18T23:59:59Z",
+        text=open("tests/fixtures/gas-standard-rate.json", "r").read(),
+    )
+    requests_mock.get(
+        "https://api.octopus.energy/v1/products/FIX-12M-20-09-21/gas-tariffs/G-1R-FIX-12M-20-09-21-H/standing-charges/?period_from=2021-01-01T00:00:00Z&period_to=2021-01-18T23:59:59Z",
+        text=open("tests/fixtures/gas-standing-charges.json", "r").read(),
+    )
