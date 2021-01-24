@@ -41,7 +41,6 @@ class OctoCost(hass.Hass):
                 use=self.consumption_url("gas"),
                 cost=self.tariff_url(energy="gas", tariff=self.gas_tariff),
                 date=self.gas_start_date,
-                gas=True,
             )
 
         for hour in [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22]:
@@ -86,89 +85,90 @@ class OctoCost(hass.Hass):
     def cost_and_usage_callback(self, **kwargs):
         self.use_url = kwargs.get("use")
         self.cost_url = kwargs.get("cost")
-        self.startdate = kwargs.get("date")
+        self.start_date = kwargs.get("date")
         today = datetime.date.today()
+        self.gas = True if "gas" in self.use_url else False
         self.yesterday = today - datetime.timedelta(days=1)
-        startyear = datetime.date(today.year, 1, 1)
-        startmonth = datetime.date(today.year, today.month, 1)
-        startday = self.yesterday
+        start_year = datetime.date(today.year, 1, 1)
+        start_month = datetime.date(today.year, today.month, 1)
+        start_day = self.yesterday
 
-        if today == startmonth:
+        if today == start_month:
             if today.month == 1:
-                startmonth = datetime.date(today.year - 1, 12, 1)
+                start_month = datetime.date(today.year - 1, 12, 1)
             else:
-                startmonth = datetime.date(today.year, today.month - 1, 1)
-        if today == startyear:
-            startyear = datetime.date(today.year - 1, 1, 1)
+                start_month = datetime.date(today.year, today.month - 1, 1)
+        if today == start_year:
+            start_year = datetime.date(today.year - 1, 1, 1)
 
-        if self.startdate > startmonth:
-            startmonth = self.startdate
+        if self.start_date > start_month:
+            start_month = self.start_date
 
-        if self.startdate > startyear:
-            startyear = self.startdate
+        if self.start_date > start_year:
+            start_year = self.start_date
 
-        dayusage, daycost = self.calculate_cost_and_usage(start=startday)
-        self.log("Yesterday usage: {}".format(dayusage), level="INFO")
-        self.log("Yesterday cost: {} p".format(daycost), level="INFO")
+        day_usage, day_cost = self.calculate_cost_and_usage(start=start_day)
+        self.log("Yesterday usage: {}".format(day_usage), level="INFO")
+        self.log("Yesterday cost: {} p".format(day_cost), level="INFO")
 
-        monthlyusage, monthlycost = self.calculate_cost_and_usage(start=startmonth)
-        self.log("Total monthly usage: {}".format(monthlyusage), level="INFO")
-        self.log("Total monthly cost: {} p".format(monthlycost), level="INFO")
+        monthly_usage, monthly_cost = self.calculate_cost_and_usage(start=start_month)
+        self.log("Total monthly usage: {}".format(monthly_usage), level="INFO")
+        self.log("Total monthly cost: {} p".format(monthly_cost), level="INFO")
 
-        yearlyusage, yearlycost = self.calculate_cost_and_usage(start=startyear)
-        self.log("Total yearly usage: {}".format(yearlyusage), level="INFO")
-        self.log("Total yearly cost: {} p".format(yearlycost), level="INFO")
+        yearly_usage, yearly_cost = self.calculate_cost_and_usage(start=start_year)
+        self.log("Total yearly usage: {}".format(yearly_usage), level="INFO")
+        self.log("Total yearly cost: {} p".format(yearly_cost), level="INFO")
 
         if not self.gas:
             self.set_state(
                 "sensor.octopus_yearly_usage",
-                state=round(yearlyusage, 2),
+                state=round(yearly_usage, 2),
                 attributes={"unit_of_measurement": "kWh", "icon": "mdi:flash"},
             )
             self.set_state(
                 "sensor.octopus_yearly_cost",
-                state=round(yearlycost / 100, 2),
+                state=round(yearly_cost / 100, 2),
                 attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
             )
             self.set_state(
                 "sensor.octopus_monthly_usage",
-                state=round(monthlyusage, 2),
+                state=round(monthly_usage, 2),
                 attributes={"unit_of_measurement": "kWh", "icon": "mdi:flash"},
             )
             self.set_state(
                 "sensor.octopus_monthly_cost",
-                state=round(monthlycost / 100, 2),
+                state=round(monthly_cost / 100, 2),
                 attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
             )
             self.set_state(
                 "sensor.octopus_day_usage",
-                state=round(dayusage, 2),
+                state=round(day_usage, 2),
                 attributes={"unit_of_measurement": "kWh", "icon": "mdi:flash"},
             )
             self.set_state(
                 "sensor.octopus_day_cost",
-                state=round(daycost / 100, 2),
+                state=round(day_cost / 100, 2),
                 attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
             )
         else:
             self.set_state(
                 "sensor.octopus_yearly_gas_usage",
-                state=round(yearlyusage, 2),
+                state=round(yearly_usage, 2),
                 attributes={"unit_of_measurement": "m3", "icon": "mdi:fire"},
             )
             self.set_state(
                 "sensor.octopus_yearly_gas_cost",
-                state=round(yearlycost / 100, 2),
+                state=round(yearly_cost / 100, 2),
                 attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
             )
             self.set_state(
                 "sensor.octopus_monthly_gas_usage",
-                state=round(monthlyusage, 2),
+                state=round(monthly_usage, 2),
                 attributes={"unit_of_measurement": "m3", "icon": "mdi:fire"},
             )
             self.set_state(
                 "sensor.octopus_monthly_gas_cost",
-                state=round(monthlycost / 100, 2),
+                state=round(monthly_cost / 100, 2),
                 attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
             )
 
