@@ -6,6 +6,7 @@ import pytz
 import requests
 from appdaemon.plugins.hass import hassapi as hass
 
+BASEURL = "https://api.octopus.energy/v1"
 
 class OctoCost(hass.Hass):
     def initialize(self):
@@ -25,79 +26,19 @@ class OctoCost(hass.Hass):
                 str(self.gas.get("gas_start_date"))
             )
 
-        self.elec_consumption_url = (
-            "https://api.octopus.energy/"
-            + "v1/electricity-meter-points/"
-            + str(self.mpan)
-            + "/meters/"
-            + str(self.serial)
-            + "/consumption/"
-        )
-        self.agile_cost_url = (
-            "https://api.octopus.energy/v1/products/"
-            + "AGILE-18-02-21/electricity-tariffs/E-1R-AGILE-18-02-21-"
-            + str(self.region)
-            + "/standard-unit-rates/"
-        )
-        self.gas_consumption_url = (
-            "https://api.octopus.energy/"
-            + "v1/gas-meter-points/"
-            + str(self.mprn)
-            + "/meters/"
-            + str(self.gas_serial)
-            + "/consumption/"
-        )
-        self.gas_cost_url = (
-            "https://api.octopus.energy/v1/products/"
-            + self.gas_tariff
-            + "/gas-tariffs/G-1R-"
-            + self.gas_tariff
-            + "-"
-            + str(self.region)
-            + "/standard-unit-rates/"
-        )
-        self.gas_std_chg_url = (
-            "https://api.octopus.energy/v1/products/"
-            + self.gas_tariff
-            + "/gas-tariffs/G-1R-"
-            + self.gas_tariff
-            + "-"
-            + str(self.region)
-            + "/standing-charges/"
-        )
-        # Assumes gas and comparison leccy are on same tariff
-        self.elec_cost_url = (
-            "https://api.octopus.energy/v1/products/"
-            + self.gas_tariff
-            + "/electricity-tariffs/E-1R-"
-            + self.gas_tariff
-            + "-"
-            + str(self.region)
-            + "/standard-unit-rates/"
-        )
-        self.elec_std_chg_url = (
-            "https://api.octopus.energy/v1/products/"
-            + self.gas_tariff
-            + "/electricity-tariffs/E-1R-"
-            + self.gas_tariff
-            + "-"
-            + str(self.region)
-            + "/standing-charges/"
-        )
-
         self.run_in(
             self.cost_and_usage_callback,
             5,
-            use=self.elec_consumption_url,
-            cost=self.agile_cost_url,
+            use=self.consumption_url(),
+            cost=self.tariff_url(),
             date=self.elec_start_date,
         )
         if self.gas:
             self.run_in(
                 self.cost_and_usage_callback,
                 65,
-                use=self.gas_consumption_url,
-                cost=self.gas_cost_url,
+                use=self.consumption_url("gas"),
+                cost=self.tariff_url(energy="gas", tariff=self.gas_tariff),
                 date=self.gas_start_date,
                 gas=True,
             )
@@ -106,8 +47,8 @@ class OctoCost(hass.Hass):
             self.run_daily(
                 self.cost_and_usage_callback,
                 datetime.time(hour, 5, 0),
-                use=self.elec_consumption_url,
-                cost=self.agile_cost_url,
+                use=self.consumption_url(),
+                cost=self.tariff_url(),
                 date=self.elec_start_date,
             )
 
@@ -115,20 +56,31 @@ class OctoCost(hass.Hass):
                 self.run_daily(
                     self.cost_and_usage_callback,
                     datetime.time(hour, 7, 0),
-                    use=self.gas_consumption_url,
-                    cost=self.gas_cost_url,
+                    use=self.consumption_url("gas"),
+                    cost=self.tariff_url(energy="gas", tariff=self.gas_tariff),
                     date=self.gas_start_date,
-                    gas=True,
-                    gas_price=self.gas_std_chg_url,
                 )
 
     @classmethod
     def find_region(cls, mpan):
-        url = "https://api.octopus.energy/v1/electricity-meter-points/" + str(mpan)
+        url = BASEURL + "/electricity-meter-points/" + str(mpan)
         meter_details = requests.get(url)
         json_meter_details = json.loads(meter_details.text)
         region = str(json_meter_details["gsp"][-1])
         return region
+
+    def tariff_url(self, **kwargs):
+        energy = kwargs.get("energy", "electricity")
+        tariff = kwargs.get("tariff", "AGILE-18-02-21")
+        units = kwargs.get("units", "standard-unit-rates")
+        url = f'{BASEURL}/products/{tariff}/{energy}-tariffs/{energy[0].upper()}-1R-{tariff}-{self.region}/{units}/'
+        return url
+
+    def consumption_url(self, energy = "electricity"):
+        meter_point = self.mprn if energy == "gas" else self.mpan
+        serial = self.gas_serial if energy == "gas" else self.serial
+        url = f'{BASEURL}/{energy}-meter-points/{meter_point}/meters/{serial}/consumption/'
+        return url
 
     def cost_and_usage_callback(self, **kwargs):
         self.use_url = kwargs.get("use")
@@ -276,9 +228,9 @@ class OctoCost(hass.Hass):
         # Applies to fixed rate gas and fixed rate electricity
         if "-1R-FIX-" in self.cost_url:
             if "gas-tariffs" in self.cost_url:
-                std_chg_url = self.gas_std_chg_url
+                std_chg_url = self.tariff_url(energy="gas", tariff=self.gas_tariff, units="standing-charges")
             else:
-                std_chg_url = self.elec_std_chg_url
+                std_chg_url = self.tariff_url(tariff=self.gas_tariff, units="standing-charges")
 
             standing_chg_resp = requests.get(
                 url=std_chg_url
