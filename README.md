@@ -1,5 +1,7 @@
 # OctoCost
 
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs) [![codecov](https://codecov.io/gh/lildude/octocost/branch/main/graph/badge.svg?token=OEGCXZNPDX)](https://codecov.io/gh/lildude/octocost)
+
 🚧 WIP: I'm in the process of improving this fork of the original source now it has been archived to keep it alive and to make it more useful and reliable.
 
 Please consider signing up to Octopus Energy with my referral code: <https://share.octopus.energy/mauve-ash-375> to give you and me £50 credit in the mean time.
