@@ -197,12 +197,12 @@ def test_callback_sets_electricity_states(hass_driver, octocost: OctoCost):
         attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
     )
     set_state.assert_any_call(
-        "sensor.octopus_day_usage",
+        "sensor.octopus_daily_usage",
         state=7.7,
         attributes={"unit_of_measurement": "kWh", "icon": "mdi:flash"},
     )
     set_state.assert_any_call(
-        "sensor.octopus_day_cost",
+        "sensor.octopus_daily_cost",
         state=1.09,
         attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
     )

@@ -162,12 +162,12 @@ class OctoCost(hass.Hass):
                 attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
             )
             self.set_state(
-                "sensor.octopus_day_usage",
+                "sensor.octopus_daily_usage",
                 state=round(day_usage, 2),
                 attributes={"unit_of_measurement": "kWh", "icon": "mdi:flash"},
             )
             self.set_state(
-                "sensor.octopus_day_cost",
+                "sensor.octopus_daily_cost",
                 state=round(day_cost / 100, 2),
                 attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
             )
