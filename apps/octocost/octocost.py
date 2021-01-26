@@ -107,17 +107,22 @@ class OctoCost(hass.Hass):
         if self.start_date > start_year:
             start_year = self.start_date
 
+        energy = "gas" if self.gas else "electricity"
         day_usage, day_cost = self.calculate_cost_and_usage(start=start_day)
-        self.log("Yesterday usage: {}".format(day_usage), level="INFO")
-        self.log("Yesterday cost: {} p".format(day_cost), level="INFO")
+        self.log("Yesterday {} usage: {}".format(energy, day_usage), level="INFO")
+        self.log("Yesterday {} cost: {} p".format(energy, day_cost), level="INFO")
 
         monthly_usage, monthly_cost = self.calculate_cost_and_usage(start=start_month)
-        self.log("Total monthly usage: {}".format(monthly_usage), level="INFO")
-        self.log("Total monthly cost: {} p".format(monthly_cost), level="INFO")
+        self.log(
+            "Total monthly {} usage: {}".format(energy, monthly_usage), level="INFO"
+        )
+        self.log(
+            "Total monthly {} cost: {} p".format(energy, monthly_cost), level="INFO"
+        )
 
         yearly_usage, yearly_cost = self.calculate_cost_and_usage(start=start_year)
-        self.log("Total yearly usage: {}".format(yearly_usage), level="INFO")
-        self.log("Total yearly cost: {} p".format(yearly_cost), level="INFO")
+        self.log("Total yearly {} usage: {}".format(energy, yearly_usage), level="INFO")
+        self.log("Total yearly {} cost: {} p".format(energy, yearly_cost), level="INFO")
 
         if self.gas:
             self.set_state(
