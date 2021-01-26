@@ -3,7 +3,7 @@
 # Otherwise, Black is run and its changes are committed to the repo.
 # https://github.com/cclauss/autoblack
 
-name: autoblack_push
+name: Auto Black
 on: [push]
 jobs:
   black:
@@ -21,5 +21,5 @@ jobs:
           git config --global user.name github-actions
           git config --global user.email '${GITHUB_ACTOR}@users.noreply.github.com'
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY
-          git commit -am "fixup! Format Python code with psf/black push"
+          git commit -am "Format Python code with psf/black on push"
           git push --force origin HEAD:$GITHUB_REF
