@@ -4,6 +4,8 @@
 
 🚧 WIP: I'm in the process of improving this fork of the original source now it has been archived to keep it alive and to make it more useful and reliable.
 
+**NOTE:** The configuration keys have changed slightly in this fork to use snake_case.
+
 Please consider signing up to Octopus Energy with my referral code: <https://share.octopus.energy/mauve-ash-375> to give you and me £50 credit in the mean time.
 
 Want to motivate me to improve this quicker? [Sponsor me](https://github.com/sponsors/lildude) to work on it 😉 💖

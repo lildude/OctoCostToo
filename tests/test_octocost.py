@@ -171,9 +171,11 @@ def test_callback_sets_electricity_states(hass_driver, octocost: OctoCost):
     octocost.calculate_cost_and_usage = Mock(return_value=[7.7, 109.0])
 
     octocost.cost_and_usage_callback(
-        use=octocost.consumption_url(),
-        cost=octocost.tariff_url(),
-        date=datetime.date(2020, 12, 27),
+        {
+            "use": octocost.consumption_url(),
+            "cost": octocost.tariff_url(),
+            "date": datetime.date(2020, 12, 27),
+        }
     )
 
     set_state.assert_any_call(
@@ -214,9 +216,11 @@ def test_callback_sets_gas_states(hass_driver, octocost: OctoCost):
     octocost.calculate_cost_and_usage = Mock(return_value=[7.7, 150.8])
 
     octocost.cost_and_usage_callback(
-        use=octocost.consumption_url("gas"),
-        cost=octocost.tariff_url(energy="gas", tariff=octocost.gas_tariff),
-        date=datetime.date(2020, 12, 27),
+        {
+            "use": octocost.consumption_url("gas"),
+            "cost": octocost.tariff_url(energy="gas", tariff=octocost.gas_tariff),
+            "date": datetime.date(2020, 12, 27),
+        }
     )
 
     set_state.assert_any_call(
