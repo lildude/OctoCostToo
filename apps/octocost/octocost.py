@@ -82,7 +82,7 @@ class OctoCost(hass.Hass):
         url = f"{BASEURL}/{energy}-meter-points/{meter_point}/meters/{serial}/consumption/"
         return url
 
-    def cost_and_usage_callback(self, **kwargs):
+    def cost_and_usage_callback(self, kwargs):
         self.use_url = kwargs.get("use")
         self.cost_url = kwargs.get("cost")
         self.start_date = kwargs.get("date")
