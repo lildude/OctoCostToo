@@ -119,7 +119,28 @@ class OctoCost(hass.Hass):
         self.log("Total yearly usage: {}".format(yearly_usage), level="INFO")
         self.log("Total yearly cost: {} p".format(yearly_cost), level="INFO")
 
-        if not self.gas:
+        if self.gas:
+            self.set_state(
+                "sensor.octopus_yearly_gas_usage",
+                state=round(yearly_usage, 2),
+                attributes={"unit_of_measurement": "m3", "icon": "mdi:fire"},
+            )
+            self.set_state(
+                "sensor.octopus_yearly_gas_cost",
+                state=round(yearly_cost / 100, 2),
+                attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
+            )
+            self.set_state(
+                "sensor.octopus_monthly_gas_usage",
+                state=round(monthly_usage, 2),
+                attributes={"unit_of_measurement": "m3", "icon": "mdi:fire"},
+            )
+            self.set_state(
+                "sensor.octopus_monthly_gas_cost",
+                state=round(monthly_cost / 100, 2),
+                attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
+            )
+        else:
             self.set_state(
                 "sensor.octopus_yearly_usage",
                 state=round(yearly_usage, 2),
@@ -148,27 +169,6 @@ class OctoCost(hass.Hass):
             self.set_state(
                 "sensor.octopus_day_cost",
                 state=round(day_cost / 100, 2),
-                attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
-            )
-        else:
-            self.set_state(
-                "sensor.octopus_yearly_gas_usage",
-                state=round(yearly_usage, 2),
-                attributes={"unit_of_measurement": "m3", "icon": "mdi:fire"},
-            )
-            self.set_state(
-                "sensor.octopus_yearly_gas_cost",
-                state=round(yearly_cost / 100, 2),
-                attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
-            )
-            self.set_state(
-                "sensor.octopus_monthly_gas_usage",
-                state=round(monthly_usage, 2),
-                attributes={"unit_of_measurement": "m3", "icon": "mdi:fire"},
-            )
-            self.set_state(
-                "sensor.octopus_monthly_gas_cost",
-                state=round(monthly_cost / 100, 2),
                 attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
             )
 
