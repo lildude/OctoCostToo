@@ -133,12 +133,12 @@ class OctoCost(hass.Hass):
 
         energy = "gas" if self.gas else "electricity"
         tariff = re.search(r"products/([^/]+)/", self.cost_url).group(1)
-        day_usage, day_cost = self.calculate_cost_and_usage(start=start_day)
+        daily_usage, daily_cost = self.calculate_cost_and_usage(start=start_day)
         self.log(
-            "Yesterday {} {} usage: {}".format(tariff, energy, day_usage), level="INFO"
+            "Yesterday {} {} usage: {}".format(tariff, energy, daily_usage), level="INFO"
         )
         self.log(
-            "Yesterday {} {} cost: {} p".format(tariff, energy, day_cost), level="INFO"
+            "Yesterday {} {} cost: {} p".format(tariff, energy, daily_cost), level="INFO"
         )
 
         monthly_usage, monthly_cost = self.calculate_cost_and_usage(start=start_month)
@@ -162,74 +162,36 @@ class OctoCost(hass.Hass):
         )
 
         if self.gas:
-            self.set_state(
-                "sensor.octopus_yearly_gas_usage",
-                state=round(yearly_usage, 2),
-                attributes={"unit_of_measurement": "m3", "icon": "mdi:fire"},
-            )
-            self.set_state(
-                "sensor.octopus_yearly_gas_cost",
-                state=round(yearly_cost / 100, 2),
-                attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
-            )
-            self.set_state(
-                "sensor.octopus_monthly_gas_usage",
-                state=round(monthly_usage, 2),
-                attributes={"unit_of_measurement": "m3", "icon": "mdi:fire"},
-            )
-            self.set_state(
-                "sensor.octopus_monthly_gas_cost",
-                state=round(monthly_cost / 100, 2),
-                attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
-            )
+            for period in ["yearly", "monthly"]:
+                self.set_state(
+                    f"sensor.octopus_{period}_gas_usage",
+                    state=round(locals()[f"{period}_usage"], 2),
+                    attributes={"unit_of_measurement": "m3", "icon": "mdi:fire"},
+                )
+                self.set_state(
+                    f"sensor.octopus_{period}_gas_cost",
+                    state=round(locals()[f"{period}_cost"] / 100, 2),
+                    attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
+                )
         else:
-            self.set_state(
-                "sensor.octopus_yearly_usage",
-                state=round(yearly_usage, 2),
-                attributes={"unit_of_measurement": "kWh", "icon": "mdi:flash"},
-            )
-            self.set_state(
-                "sensor.octopus_monthly_usage",
-                state=round(monthly_usage, 2),
-                attributes={"unit_of_measurement": "kWh", "icon": "mdi:flash"},
-            )
-            self.set_state(
-                "sensor.octopus_daily_usage",
-                state=round(day_usage, 2),
-                attributes={"unit_of_measurement": "kWh", "icon": "mdi:flash"},
-            )
-            if "AGILE" in tariff:
+            for period in ["yearly", "monthly", "daily"]:
                 self.set_state(
-                    "sensor.octopus_yearly_cost",
-                    state=round(yearly_cost / 100, 2),
-                    attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
+                    f"sensor.octopus_{period}_usage",
+                    state=round(locals()[f"{period}_usage"], 2),
+                    attributes={"unit_of_measurement": "kWh", "icon": "mdi:flash"},
                 )
-                self.set_state(
-                    "sensor.octopus_monthly_cost",
-                    state=round(monthly_cost / 100, 2),
-                    attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
-                )
-                self.set_state(
-                    "sensor.octopus_daily_cost",
-                    state=round(day_cost / 100, 2),
-                    attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
-                )
-            else:
-                self.set_state(
-                    "sensor.octopus_comparison_yearly_cost",
-                    state=round(yearly_cost / 100, 2),
-                    attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
-                )
-                self.set_state(
-                    "sensor.octopus_comparison_monthly_cost",
-                    state=round(monthly_cost / 100, 2),
-                    attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
-                )
-                self.set_state(
-                    "sensor.octopus_comparison_daily_cost",
-                    state=round(day_cost / 100, 2),
-                    attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
-                )
+                if "AGILE" in tariff:
+                    self.set_state(
+                        f"sensor.octopus_{period}_cost",
+                        state=round(locals()[f"{period}_cost"] / 100, 2),
+                        attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
+                    )
+                else:
+                    self.set_state(
+                        f"sensor.octopus_comparison_{period}_cost",
+                        state=round(locals()[f"{period}_cost"] / 100, 2),
+                        attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
+                    )
 
     def calculate_count(self, start):
         numberdays = self.yesterday - start
