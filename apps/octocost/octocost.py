@@ -1,5 +1,6 @@
 import datetime
 import json
+import re
 
 import dateutil.parser
 import pytz
@@ -18,6 +19,7 @@ class OctoCost(hass.Hass):
         # self.region = self.args.get("region", self.find_region(self.mpan))
         self.region = self.args["region"].upper()
         self.elec_start_date = datetime.date.fromisoformat(str(self.args["start_date"]))
+        self.comparison_tariff = self.args.get("comparison_tariff", None)
         self.gas = self.args.get("gas", None)
         if self.gas:
             self.gas_tariff = self.gas.get("gas_tariff", None)
@@ -34,6 +36,18 @@ class OctoCost(hass.Hass):
             cost=self.tariff_url(),
             date=self.elec_start_date,
         )
+
+        if self.comparison_tariff:
+            self.run_in(
+                self.cost_and_usage_callback,
+                6,
+                use=self.consumption_url(),
+                cost=self.tariff_url(
+                    energy="electricity", tariff=self.comparison_tariff
+                ),
+                date=self.elec_start_date,
+            )
+
         if self.gas:
             self.run_in(
                 self.cost_and_usage_callback,
@@ -49,6 +63,16 @@ class OctoCost(hass.Hass):
                 datetime.time(hour, 5, 0),
                 use=self.consumption_url(),
                 cost=self.tariff_url(),
+                date=self.elec_start_date,
+            )
+
+            self.run_daily(
+                self.cost_and_usage_callback,
+                datetime.time(hour, 6, 0),
+                use=self.consumption_url(),
+                cost=self.tariff_url(
+                    energy="electricity", tariff=self.comparison_tariff
+                ),
                 date=self.elec_start_date,
             )
 
@@ -108,21 +132,34 @@ class OctoCost(hass.Hass):
             start_year = self.start_date
 
         energy = "gas" if self.gas else "electricity"
+        tariff = re.search(r"products/([^/]+)/", self.cost_url).group(1)
         day_usage, day_cost = self.calculate_cost_and_usage(start=start_day)
-        self.log("Yesterday {} usage: {}".format(energy, day_usage), level="INFO")
-        self.log("Yesterday {} cost: {} p".format(energy, day_cost), level="INFO")
+        self.log(
+            "Yesterday {} {} usage: {}".format(tariff, energy, day_usage), level="INFO"
+        )
+        self.log(
+            "Yesterday {} {} cost: {} p".format(tariff, energy, day_cost), level="INFO"
+        )
 
         monthly_usage, monthly_cost = self.calculate_cost_and_usage(start=start_month)
         self.log(
-            "Total monthly {} usage: {}".format(energy, monthly_usage), level="INFO"
+            "Total monthly {} {} usage: {}".format(tariff, energy, monthly_usage),
+            level="INFO",
         )
         self.log(
-            "Total monthly {} cost: {} p".format(energy, monthly_cost), level="INFO"
+            "Total monthly {} {} cost: {} p".format(tariff, energy, monthly_cost),
+            level="INFO",
         )
 
         yearly_usage, yearly_cost = self.calculate_cost_and_usage(start=start_year)
-        self.log("Total yearly {} usage: {}".format(energy, yearly_usage), level="INFO")
-        self.log("Total yearly {} cost: {} p".format(energy, yearly_cost), level="INFO")
+        self.log(
+            "Total yearly {} {} usage: {}".format(tariff, energy, yearly_usage),
+            level="INFO",
+        )
+        self.log(
+            "Total yearly {} {} cost: {} p".format(tariff, energy, yearly_cost),
+            level="INFO",
+        )
 
         if self.gas:
             self.set_state(
@@ -152,30 +189,47 @@ class OctoCost(hass.Hass):
                 attributes={"unit_of_measurement": "kWh", "icon": "mdi:flash"},
             )
             self.set_state(
-                "sensor.octopus_yearly_cost",
-                state=round(yearly_cost / 100, 2),
-                attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
-            )
-            self.set_state(
                 "sensor.octopus_monthly_usage",
                 state=round(monthly_usage, 2),
                 attributes={"unit_of_measurement": "kWh", "icon": "mdi:flash"},
-            )
-            self.set_state(
-                "sensor.octopus_monthly_cost",
-                state=round(monthly_cost / 100, 2),
-                attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
             )
             self.set_state(
                 "sensor.octopus_daily_usage",
                 state=round(day_usage, 2),
                 attributes={"unit_of_measurement": "kWh", "icon": "mdi:flash"},
             )
-            self.set_state(
-                "sensor.octopus_daily_cost",
-                state=round(day_cost / 100, 2),
-                attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
-            )
+            if "AGILE" in tariff:
+                self.set_state(
+                    "sensor.octopus_yearly_cost",
+                    state=round(yearly_cost / 100, 2),
+                    attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
+                )
+                self.set_state(
+                    "sensor.octopus_monthly_cost",
+                    state=round(monthly_cost / 100, 2),
+                    attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
+                )
+                self.set_state(
+                    "sensor.octopus_daily_cost",
+                    state=round(day_cost / 100, 2),
+                    attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
+                )
+            else:
+                self.set_state(
+                    "sensor.octopus_comparison_yearly_cost",
+                    state=round(yearly_cost / 100, 2),
+                    attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
+                )
+                self.set_state(
+                    "sensor.octopus_comparison_monthly_cost",
+                    state=round(monthly_cost / 100, 2),
+                    attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
+                )
+                self.set_state(
+                    "sensor.octopus_comparison_daily_cost",
+                    state=round(day_cost / 100, 2),
+                    attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
+                )
 
     def calculate_count(self, start):
         numberdays = self.yesterday - start
