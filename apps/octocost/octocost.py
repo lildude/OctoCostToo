@@ -10,7 +10,7 @@ from appdaemon.plugins.hass import hassapi as hass
 BASEURL = "https://api.octopus.energy/v1"
 
 
-class OctoCost(hass.Hass):
+class OctoCostToo(hass.Hass):
     def initialize(self):
         self.auth = self.args["auth"]
         self.mpan = self.args["mpan"]
@@ -133,12 +133,21 @@ class OctoCost(hass.Hass):
 
         energy = "gas" if self.gas else "electricity"
         tariff = re.search(r"products/([^/]+)/", self.cost_url).group(1)
+        cost_n_use = {}
+        for period in ["daily", "monthly", "yearly"]:
+            (
+                cost_n_use[f"{period}_usage"],
+                cost_n_use[f"{period}_cost"],
+            ) = self.calculate_cost_and_usage(start=start_day)
+
         daily_usage, daily_cost = self.calculate_cost_and_usage(start=start_day)
         self.log(
-            "Yesterday {} {} usage: {}".format(tariff, energy, daily_usage), level="INFO"
+            "Yesterday {} {} usage: {}".format(tariff, energy, daily_usage),
+            level="INFO",
         )
         self.log(
-            "Yesterday {} {} cost: {} p".format(tariff, energy, daily_cost), level="INFO"
+            "Yesterday {} {} cost: {} p".format(tariff, energy, daily_cost),
+            level="INFO",
         )
 
         monthly_usage, monthly_cost = self.calculate_cost_and_usage(start=start_month)

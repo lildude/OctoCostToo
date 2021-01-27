@@ -1,10 +1,6 @@
-# OctoCost
+# OctoCostToo
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs) [![codecov](https://codecov.io/gh/lildude/octocost/branch/main/graph/badge.svg?token=OEGCXZNPDX)](https://codecov.io/gh/lildude/octocost)
-
-🚧 WIP: I'm in the process of improving this fork of the original source now it has been archived to keep it alive and to make it more useful and reliable.
-
-**NOTE:** The configuration keys have changed slightly in this fork to use snake_case.
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs) [![codecov](https://codecov.io/gh/lildude/OctoCostToo/branch/main/graph/badge.svg?token=OEGCXZNPDX)](https://codecov.io/gh/lildude/OctoCostToo)
 
 Please consider signing up to Octopus Energy with my referral code: <https://share.octopus.energy/mauve-ash-375> to give you and me £50 credit in the mean time.
 
@@ -14,13 +10,13 @@ Want to motivate me to improve this quicker? [Sponsor me](https://github.com/spo
 
 ## Summary
 
-Octocost is an [AppDaemon](https://www.home-assistant.io/docs/ecosystem/appdaemon/) app for [Home Assistant](https://www.home-assistant.io/) which calculates the daily, monthly and yearly cost and usage of the Octopus Energy tariffs. 
+OctoCostToo is an [AppDaemon](https://www.home-assistant.io/docs/ecosystem/appdaemon/) app for [Home Assistant](https://www.home-assistant.io/) which calculates the daily, monthly and yearly cost and usage of the Octopus Energy tariffs.
 
-By default OctoCost only gathers usage and cost information for the current (as of Jan 2021) Agile tariff: `AGILE-18-02-21` but can be configured to gather usage and cost information for an another electricity tariff, giving you the opportunity to compare your current tariff to the Agile tariff.
+By default OctoCostToo only gathers usage and cost information for the current (as of Jan 2021) Agile tariff: `AGILE-18-02-21` but can be configured to gather usage and cost information for an another electricity tariff, giving you the opportunity to compare your current tariff to the Agile tariff.
 
 Usage and cost information can also be gathered for a gas tariff.
 
-OctoCost creates and sets sensors for daily, monthly and yearly cost (£) and usage (kWh), up to and including yesterday:
+OctoCostToo creates and sets sensors for daily, monthly and yearly cost (£) and usage (kWh), up to and including yesterday:
 
 ```yaml
 sensor.octopus_daily_cost
@@ -31,7 +27,7 @@ sensor.octopus_yearly_cost
 sensor.octopus_yearly_usage
 ```
 
-If a comparison electricity tariff is configured, OctoCost will also create the following sensors:
+If a comparison electricity tariff is configured, OctoCostToo will also create the following sensors:
 
 ```yaml
 sensor.octopus_comparison_daily_cost
@@ -39,7 +35,7 @@ sensor.octopus_comparison_monthly_cost
 sensor.octopus_comparison_yearly_cost
 ```
 
-If the gas section is configured, OctoCost will also create the following sensors:
+If the gas section is configured, OctoCostToo will also create the following sensors:
 
 ```yaml
 sensor.octopus_monthly_gas_cost
@@ -52,14 +48,14 @@ The data is updated once every two hours, although in reality the data Octopus E
 
 ## Installation
 
-Use [HACS](https://github.com/custom-components/hacs) or [download the tarball](https://github.com/lildude/octocost/releases) and extract the `octocost` directory from inside the `apps` directory to your local `apps` directory, then add the configuration to enable the OctoCost module.
+Use [HACS](https://github.com/custom-components/hacs) or [download the tarball](https://github.com/lildude/OctoCostToo/releases) and extract the `OctoCostToo` directory from inside the `apps` directory to your local `apps` directory, then add the configuration to enable the OctoCostToo module.
 
 ## Apps.yaml Configuration
 
 ```yaml
-octocost:
-  module: octocost 
-  class: OctoCost 
+OctoCostToo:
+  module: octocosttoo 
+  class: OctoCostToo 
   region: H
   mpan: <13 digit MPAN number>
   serial:  <Serial number>
@@ -77,9 +73,9 @@ The module and class sections need to remain as above, other sections should be 
 
 | Field             | Changeable | Example          |
 | -----             | ---------- | -------          |
-| Title             | Yes        | octocost         |
-| module            | No         | octocost         |
-| class             | No         | OctoCost         |
+| Title             | Yes        | OctoCostToo      |
+| module            | No         | octocosttoo      |
+| class             | No         | OctoCostTo       |
 | region            | Yes        | H                |
 | mpan              | Yes        | 2000012345678    |
 | serial            | Yes        | 20L123456        |
@@ -118,7 +114,13 @@ Once the sensors are created, they can be displayed as cards within the Lovelace
         type: glance
 ```
 
-![Example Lovelace UI Usage and Cost glance card](https://github.com/lildude/octocost/blob/main/LovelaceUsageCard.PNG)
+![Example Lovelace UI Usage and Cost glance card](https://github.com/lildude/OctoCostToo/blob/main/LovelaceUsageCard.PNG)
+
+## Credit
+
+OctoCostToo is a fork of the original [octocost](https://github.com/badguy99/octocost).
+
+**NOTE:** The configuration for OctoCostToo is not compatible with the original.
 
 ---
 
