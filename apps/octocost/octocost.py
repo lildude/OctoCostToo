@@ -229,19 +229,16 @@ class OctoCost(hass.Hass):
 
         if consump_resp.status_code != 200:
             self.log(
-                "Error {} getting consumption data: {}".format(
-                    consump_resp.status_code, consump_resp.text
-                ),
+                f"Error {consump_resp.status_code} getting consumption data: {consump_resp.text}",
                 level="ERROR",
             )
+            return
         if cost_resp.status_code != 200:
             self.log(
-                "Error {} getting cost data: {}".format(
-                    cost_resp.status_code, cost_resp.text
-                ),
+                f"Error {cost_resp.status_code} getting cost data: {cost_resp.text}",
                 level="ERROR",
             )
-
+            return
         # If cost_url contains `-1R-FIX-`, assume it's a fixed rate and get the standing charge too.
         # Applies to fixed rate gas and fixed rate electricity
         if "-1R-FIX-" in self.cost_url:
