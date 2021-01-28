@@ -139,6 +139,7 @@ class OctoCost(hass.Hass):
             "monthly": start_month,
             "yearly": start_year,
         }.items():
+            # Skip API calls etc if gas and daily as this info isn't available (yet?)
             if self.gas and period == "daily":
                 continue
 
@@ -203,10 +204,8 @@ class OctoCost(hass.Hass):
         cost = []
         utc = pytz.timezone("UTC")
         expected_count = self.calculate_count(start=start)
-        self.log("period_from: {}T00:00:00Z".format(start.isoformat()), level="DEBUG")
-        self.log(
-            "period_to: {}T23:59:59Z".format(self.yesterday.isoformat()), level="DEBUG"
-        )
+        self.log(f"period_from: {start.isoformat()}T00:00:00Z", level="DEBUG")
+        self.log(f"period_to: {self.yesterday.isoformat()}T23:59:59Z", level="DEBUG")
 
         consump_resp = requests.get(
             url=self.use_url
