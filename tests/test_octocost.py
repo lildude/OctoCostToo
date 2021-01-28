@@ -184,6 +184,7 @@ def test_callbacks_run_daily(hass_driver, octocost: OctoCost):
 @freeze_time("2021-02-01")
 def test_callback_sets_electricity_states(hass_driver, octocost: OctoCost):
     set_state = hass_driver.get_mock("set_state")
+    log = hass_driver.get_mock("log")
     octocost.calculate_cost_and_usage = Mock(return_value=[7.7, 109.0])
 
     octocost.cost_and_usage_callback(
@@ -193,6 +194,15 @@ def test_callback_sets_electricity_states(hass_driver, octocost: OctoCost):
             "date": datetime.date(2020, 12, 27),
         }
     )
+
+    log.assert_any_call("Yearly AGILE-18-02-21 electricity usage: 7.7", level="INFO")
+    log.assert_any_call("Yearly AGILE-18-02-21 electricity cost: 109.0 p", level="INFO")
+    log.assert_any_call("Monthly AGILE-18-02-21 electricity usage: 7.7", level="INFO")
+    log.assert_any_call(
+        "Monthly AGILE-18-02-21 electricity cost: 109.0 p", level="INFO"
+    )
+    log.assert_any_call("Daily AGILE-18-02-21 electricity usage: 7.7", level="INFO")
+    log.assert_any_call("Daily AGILE-18-02-21 electricity cost: 109.0 p", level="INFO")
 
     set_state.assert_any_call(
         "sensor.octopus_yearly_usage",
@@ -229,6 +239,7 @@ def test_callback_sets_electricity_states(hass_driver, octocost: OctoCost):
 @freeze_time("2021-02-01")
 def test_callback_sets_comparison_electricity_states(hass_driver, octocost: OctoCost):
     set_state = hass_driver.get_mock("set_state")
+    log = hass_driver.get_mock("log")
     octocost.calculate_cost_and_usage = Mock(return_value=[7.7, 109.0])
 
     octocost.cost_and_usage_callback(
@@ -239,6 +250,19 @@ def test_callback_sets_comparison_electricity_states(hass_driver, octocost: Octo
             ),
             "date": datetime.date(2020, 12, 27),
         }
+    )
+
+    log.assert_any_call("Yearly FIX-12M-20-09-21 electricity usage: 7.7", level="INFO")
+    log.assert_any_call(
+        "Yearly FIX-12M-20-09-21 electricity cost: 109.0 p", level="INFO"
+    )
+    log.assert_any_call("Monthly FIX-12M-20-09-21 electricity usage: 7.7", level="INFO")
+    log.assert_any_call(
+        "Monthly FIX-12M-20-09-21 electricity cost: 109.0 p", level="INFO"
+    )
+    log.assert_any_call("Daily FIX-12M-20-09-21 electricity usage: 7.7", level="INFO")
+    log.assert_any_call(
+        "Daily FIX-12M-20-09-21 electricity cost: 109.0 p", level="INFO"
     )
 
     set_state.assert_any_call(
@@ -276,6 +300,7 @@ def test_callback_sets_comparison_electricity_states(hass_driver, octocost: Octo
 @freeze_time("2020-01-01")
 def test_callback_sets_gas_states(hass_driver, octocost: OctoCost):
     set_state = hass_driver.get_mock("set_state")
+    log = hass_driver.get_mock("log")
     octocost.calculate_cost_and_usage = Mock(return_value=[7.7, 150.8])
 
     octocost.cost_and_usage_callback(
@@ -285,6 +310,11 @@ def test_callback_sets_gas_states(hass_driver, octocost: OctoCost):
             "date": datetime.date(2020, 12, 27),
         }
     )
+
+    log.assert_any_call("Yearly FIX-12M-20-09-21 gas usage: 7.7", level="INFO")
+    log.assert_any_call("Yearly FIX-12M-20-09-21 gas cost: 150.8 p", level="INFO")
+    log.assert_any_call("Monthly FIX-12M-20-09-21 gas usage: 7.7", level="INFO")
+    log.assert_any_call("Monthly FIX-12M-20-09-21 gas cost: 150.8 p", level="INFO")
 
     set_state.assert_any_call(
         "sensor.octopus_yearly_gas_usage",
