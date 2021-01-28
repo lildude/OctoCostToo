@@ -79,15 +79,19 @@ def test_consumption_url(octocost: OctoCost):
 @pytest.mark.usefixtures(
     "mock_elec_consumption_one_day", "mock_elec_agile_cost_one_day"
 )
-def test_calculate_cost_and_usage_agile_elec_only(octocost: OctoCost):
+def test_calculate_cost_and_usage_agile_elec_only(hass_driver, octocost: OctoCost):
     octocost.yesterday = datetime.date(2021, 1, 18)
     octocost.use_url = octocost.consumption_url()
     octocost.cost_url = octocost.tariff_url()
     start_day = datetime.date(2021, 1, 18)
+    log = hass_driver.get_mock("log")
 
     usage, cost = octocost.calculate_cost_and_usage(start_day)
     assert usage == 7.701
     assert cost == 108.6035
+
+    log.assert_any_call("period_from: 2021-01-18T00:00:00Z", level="DEBUG")
+    log.assert_any_call("period_to: 2021-01-18T23:59:59Z", level="DEBUG")
 
 
 @pytest.mark.usefixtures(
