@@ -133,63 +133,61 @@ class OctoCost(hass.Hass):
 
         energy = "gas" if self.gas else "electricity"
         tariff = re.search(r"products/([^/]+)/", self.cost_url).group(1)
-        daily_usage, daily_cost = self.calculate_cost_and_usage(start=start_day)
-        self.log(
-            "Yesterday {} {} usage: {}".format(tariff, energy, daily_usage), level="INFO"
-        )
-        self.log(
-            "Yesterday {} {} cost: {} p".format(tariff, energy, daily_cost), level="INFO"
-        )
+        cost_usage = {}
+        for period, start in {
+            "daily": start_day,
+            "monthly": start_month,
+            "yearly": start_year,
+        }.items():
+            if self.gas and period == "daily":
+                continue
 
-        monthly_usage, monthly_cost = self.calculate_cost_and_usage(start=start_month)
-        self.log(
-            "Total monthly {} {} usage: {}".format(tariff, energy, monthly_usage),
-            level="INFO",
-        )
-        self.log(
-            "Total monthly {} {} cost: {} p".format(tariff, energy, monthly_cost),
-            level="INFO",
-        )
-
-        yearly_usage, yearly_cost = self.calculate_cost_and_usage(start=start_year)
-        self.log(
-            "Total yearly {} {} usage: {}".format(tariff, energy, yearly_usage),
-            level="INFO",
-        )
-        self.log(
-            "Total yearly {} {} cost: {} p".format(tariff, energy, yearly_cost),
-            level="INFO",
-        )
-
-        if self.gas:
-            for period in ["yearly", "monthly"]:
+            # Get the usage and calculate the cost
+            (
+                cost_usage[f"{period}_usage"],
+                cost_usage[f"{period}_cost"],
+            ) = self.calculate_cost_and_usage(start=start)
+            # Log results for debugging
+            self.log(
+                "{} {} {} usage: {}".format(
+                    period.capitalize(), tariff, energy, cost_usage[f"{period}_usage"]
+                ),
+                level="INFO",
+            )
+            self.log(
+                "{} {} {} cost: {} p".format(
+                    period.capitalize(), tariff, energy, cost_usage[f"{period}_cost"]
+                ),
+                level="INFO",
+            )
+            # Set the states
+            if self.gas:
                 self.set_state(
                     f"sensor.octopus_{period}_gas_usage",
-                    state=round(locals()[f"{period}_usage"], 2),
+                    state=round(cost_usage[f"{period}_usage"], 2),
                     attributes={"unit_of_measurement": "m3", "icon": "mdi:fire"},
                 )
                 self.set_state(
                     f"sensor.octopus_{period}_gas_cost",
-                    state=round(locals()[f"{period}_cost"] / 100, 2),
+                    state=round(cost_usage[f"{period}_cost"] / 100, 2),
                     attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
                 )
-        else:
-            for period in ["yearly", "monthly", "daily"]:
+            else:
                 self.set_state(
                     f"sensor.octopus_{period}_usage",
-                    state=round(locals()[f"{period}_usage"], 2),
+                    state=round(cost_usage[f"{period}_usage"], 2),
                     attributes={"unit_of_measurement": "kWh", "icon": "mdi:flash"},
                 )
                 if "AGILE" in tariff:
                     self.set_state(
                         f"sensor.octopus_{period}_cost",
-                        state=round(locals()[f"{period}_cost"] / 100, 2),
+                        state=round(cost_usage[f"{period}_cost"] / 100, 2),
                         attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
                     )
                 else:
                     self.set_state(
                         f"sensor.octopus_comparison_{period}_cost",
-                        state=round(locals()[f"{period}_cost"] / 100, 2),
+                        state=round(cost_usage[f"{period}_cost"] / 100, 2),
                         attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
                     )
 
