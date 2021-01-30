@@ -109,7 +109,7 @@ def test_calculate_cost_and_usage_standard_unit_rate_gas_only(octocost: OctoCost
 def test_calculate_cost_and_usage_standard_unit_rate_elec_only(octocost: OctoCost):
     octocost.yesterday = datetime.date(2021, 1, 18)
     octocost.use_url = octocost.consumption_url()
-    octocost.cost_url = octocost.tariff_url(tariff=octocost.gas_tariff)
+    octocost.cost_url = octocost.tariff_url(tariff=octocost.comparison_tariff)
     start_day = datetime.date(2021, 1, 18)
 
     usage, cost = octocost.calculate_cost_and_usage(start_day)
