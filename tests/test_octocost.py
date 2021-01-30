@@ -1,5 +1,6 @@
 import datetime
 import json
+import re
 from unittest.mock import Mock
 
 import pytest
@@ -133,6 +134,67 @@ def test_calculate_cost_and_usage_standard_unit_rate_elec_only_five_days(
     usage, cost = octocost.calculate_cost_and_usage(start_day)
     assert usage == 41.168
     assert cost == 760.1601  # Should be (41.168 * 16.0125) + (20.1915 * 5)
+
+
+def test_calculate_cost_and_usage_consumption_error(
+    requests_mock, hass_driver, octocost: OctoCost
+):
+    cons_matcher = re.compile("consumption")
+    requests_mock.get(cons_matcher, status_code=401, text="401 Unauthorized")
+    unit_matcher = re.compile("standard-unit-rates")
+    requests_mock.get(unit_matcher, status_code=201, text="This isn't important")
+    octocost.yesterday = datetime.date(2021, 1, 18)
+    octocost.use_url = octocost.consumption_url()
+    octocost.cost_url = octocost.tariff_url()
+    start_day = datetime.date(2021, 1, 18)
+    log = hass_driver.get_mock("log")
+
+    octocost.calculate_cost_and_usage(start_day)
+
+    log.assert_any_call(
+        "Error 401 getting consumption data: 401 Unauthorized", level="ERROR"
+    )
+
+
+def test_calculate_cost_and_usage_cost_error(
+    requests_mock, hass_driver, octocost: OctoCost
+):
+    cons_matcher = re.compile("consumption")
+    requests_mock.get(cons_matcher, status_code=200, text="This isn't important")
+    unit_matcher = re.compile("standard-unit-rates")
+    requests_mock.get(unit_matcher, status_code=404, text="404 Not Found")
+    octocost.yesterday = datetime.date(2021, 1, 18)
+    octocost.use_url = octocost.consumption_url()
+    octocost.cost_url = octocost.tariff_url()
+    start_day = datetime.date(2021, 1, 18)
+    log = hass_driver.get_mock("log")
+
+    octocost.calculate_cost_and_usage(start_day)
+
+    log.assert_any_call("Error 404 getting cost data: 404 Not Found", level="ERROR")
+
+
+@pytest.mark.usefixtures("mock_elec_consumption_one_day")
+def test_calculate_cost_and_standing_charge_error(
+    requests_mock, hass_driver, octocost: OctoCost
+):
+    unit_matcher = re.compile("standard-unit-rates")
+    requests_mock.get(
+        unit_matcher, text=open("tests/fixtures/elec-standard-rate.json", "r").read()
+    )
+    std_matcher = re.compile("standing-charges")
+    requests_mock.get(std_matcher, status_code=404, text="404 Not Found")
+    octocost.yesterday = datetime.date(2021, 1, 18)
+    octocost.use_url = octocost.consumption_url()
+    octocost.cost_url = octocost.tariff_url(tariff=octocost.comparison_tariff)
+    start_day = datetime.date(2021, 1, 18)
+    log = hass_driver.get_mock("log")
+
+    octocost.calculate_cost_and_usage(start_day)
+
+    log.assert_any_call(
+        "Error 404 getting standing charge data: 404 Not Found", level="ERROR"
+    )
 
 
 def test_callbacks_run_in(hass_driver, octocost: OctoCost):

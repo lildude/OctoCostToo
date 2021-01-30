@@ -203,6 +203,7 @@ class OctoCost(hass.Hass):
         std_chg = 0
         cost = []
         utc = pytz.timezone("UTC")
+        request_error = False
         expected_count = self.calculate_count(start=start)
         self.log(f"period_from: {start.isoformat()}T00:00:00Z", level="DEBUG")
         self.log(f"period_to: {self.yesterday.isoformat()}T23:59:59Z", level="DEBUG")
@@ -232,12 +233,16 @@ class OctoCost(hass.Hass):
                 f"Error {consump_resp.status_code} getting consumption data: {consump_resp.text}",
                 level="ERROR",
             )
-            return
+            request_error = True
         if cost_resp.status_code != 200:
             self.log(
                 f"Error {cost_resp.status_code} getting cost data: {cost_resp.text}",
                 level="ERROR",
             )
+            request_error = True
+
+        # Don't attempt any further processing as we don't have the data to process
+        if request_error:
             return
         # If cost_url contains `-1R-FIX-`, assume it's a fixed rate and get the standing charge too.
         # Applies to fixed rate gas and fixed rate electricity
@@ -261,9 +266,7 @@ class OctoCost(hass.Hass):
             )
             if standing_chg_resp.status_code != 200:
                 self.log(
-                    "Error {} getting standing charge data: {}".format(
-                        standing_chg_resp.status_code, standing_chg_resp.text
-                    ),
+                    f"Error {standing_chg_resp.status_code} getting standing charge data: {standing_chg_resp.text}",
                     level="ERROR",
                 )
             else:
