@@ -244,9 +244,9 @@ class OctoCost(hass.Hass):
         # Don't attempt any further processing as we don't have the data to process
         if request_error:
             return
-        # If cost_url contains `-1R-FIX-`, assume it's a fixed rate and get the standing charge too.
-        # Applies to fixed rate gas and fixed rate electricity
-        if "-1R-FIX-" in self.cost_url:
+
+        # If cost_url does not contain `AGILE`, assume it's a fixed rate and get the standing charge too.
+        if "AGILE" not in self.cost_url:
             if "gas-tariffs" in self.cost_url:
                 std_chg_url = self.tariff_url(
                     energy="gas", tariff=self.gas_tariff, units="standing-charges"
@@ -291,7 +291,7 @@ class OctoCost(hass.Hass):
         for period in results:
             current_index = results.index(period)
             usage = usage + (results[current_index]["consumption"])
-            if "-1R-FIX-" in self.cost_url:
+            if "AGILE" not in self.cost_url:
                 # Only dealing with gas price which doesn't vary at the moment
                 if cost_json["count"] == 1:
                     cost = cost_json["results"][0]["value_inc_vat"]
