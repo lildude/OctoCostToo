@@ -139,6 +139,7 @@ class OctoCost(hass.Hass):
             "monthly": start_month,
             "yearly": start_year,
         }.items():
+            # Skip API calls etc if gas and daily as this info isn't available (yet?)
             if self.gas and period == "daily":
                 continue
 
@@ -202,11 +203,10 @@ class OctoCost(hass.Hass):
         std_chg = 0
         cost = []
         utc = pytz.timezone("UTC")
+        request_error = False
         expected_count = self.calculate_count(start=start)
-        self.log("period_from: {}T00:00:00Z".format(start.isoformat()), level="DEBUG")
-        self.log(
-            "period_to: {}T23:59:59Z".format(self.yesterday.isoformat()), level="DEBUG"
-        )
+        self.log(f"period_from: {start.isoformat()}T00:00:00Z", level="DEBUG")
+        self.log(f"period_to: {self.yesterday.isoformat()}T23:59:59Z", level="DEBUG")
 
         consump_resp = requests.get(
             url=self.use_url
@@ -230,22 +230,23 @@ class OctoCost(hass.Hass):
 
         if consump_resp.status_code != 200:
             self.log(
-                "Error {} getting consumption data: {}".format(
-                    consump_resp.status_code, consump_resp.text
-                ),
+                f"Error {consump_resp.status_code} getting consumption data: {consump_resp.text}",
                 level="ERROR",
             )
+            request_error = True
         if cost_resp.status_code != 200:
             self.log(
-                "Error {} getting cost data: {}".format(
-                    cost_resp.status_code, cost_resp.text
-                ),
+                f"Error {cost_resp.status_code} getting cost data: {cost_resp.text}",
                 level="ERROR",
             )
+            request_error = True
 
-        # If cost_url contains `-1R-FIX-`, assume it's a fixed rate and get the standing charge too.
-        # Applies to fixed rate gas and fixed rate electricity
-        if "-1R-FIX-" in self.cost_url:
+        # Don't attempt any further processing as we don't have the data to process
+        if request_error:
+            return
+
+        # If cost_url does not contain `AGILE`, assume it's a fixed rate and get the standing charge too.
+        if "AGILE" not in self.cost_url:
             if "gas-tariffs" in self.cost_url:
                 std_chg_url = self.tariff_url(
                     energy="gas", tariff=self.gas_tariff, units="standing-charges"
@@ -265,9 +266,7 @@ class OctoCost(hass.Hass):
             )
             if standing_chg_resp.status_code != 200:
                 self.log(
-                    "Error {} getting standing charge data: {}".format(
-                        standing_chg_resp.status_code, standing_chg_resp.text
-                    ),
+                    f"Error {standing_chg_resp.status_code} getting standing charge data: {standing_chg_resp.text}",
                     level="ERROR",
                 )
             else:
@@ -292,7 +291,7 @@ class OctoCost(hass.Hass):
         for period in results:
             current_index = results.index(period)
             usage = usage + (results[current_index]["consumption"])
-            if "-1R-FIX-" in self.cost_url:
+            if "AGILE" not in self.cost_url:
                 # Only dealing with gas price which doesn't vary at the moment
                 if cost_json["count"] == 1:
                     cost = cost_json["results"][0]["value_inc_vat"]
