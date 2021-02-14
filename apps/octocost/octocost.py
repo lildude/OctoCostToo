@@ -139,10 +139,6 @@ class OctoCost(hass.Hass):
             "monthly": start_month,
             "yearly": start_year,
         }.items():
-            # Skip API calls etc if gas and daily as this info isn't available (yet?)
-            if self.gas and period == "daily":
-                continue
-
             # Get the usage and calculate the cost
             (
                 cost_usage[f"{period}_usage"],
@@ -298,7 +294,7 @@ class OctoCost(hass.Hass):
                     kwh = results[current_index]["consumption"]
                     # Convert consumption from m3 to kWh for gas
                     if "gas-tariffs" in self.cost_url:
-                        kwh = kwh * 11.1868
+                        kwh = kwh * 11.0786
 
                     price = price + (cost * kwh)
                 else:
