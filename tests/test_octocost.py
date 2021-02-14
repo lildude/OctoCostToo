@@ -107,7 +107,7 @@ def test_calculate_cost_and_usage_standard_unit_rate_gas_only(octocost: OctoCost
 
     usage, cost = octocost.calculate_cost_and_usage(start_day)
     assert usage == 7.701
-    assert cost == 246.7063  # Should be (7.701 * 11.1868 * 2.6565) + 17.85
+    assert cost == 244.4927  # Should be (7.701 * 11.0786 * 2.6565) + 17.85
 
 
 @pytest.mark.usefixtures("mock_elec_consumption_one_day", "mock_elec_fixed_rates")
@@ -381,6 +381,8 @@ def test_callback_sets_gas_states(hass_driver, octocost: OctoCost):
     log.assert_any_call("Yearly FIX-12M-20-09-21 gas cost: 150.8 p", level="INFO")
     log.assert_any_call("Monthly FIX-12M-20-09-21 gas usage: 7.7", level="INFO")
     log.assert_any_call("Monthly FIX-12M-20-09-21 gas cost: 150.8 p", level="INFO")
+    log.assert_any_call("Daily FIX-12M-20-09-21 gas usage: 7.7", level="INFO")
+    log.assert_any_call("Daily FIX-12M-20-09-21 gas cost: 150.8 p", level="INFO")
 
     set_state.assert_any_call(
         "sensor.octopus_yearly_gas_usage",
