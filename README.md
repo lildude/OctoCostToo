@@ -10,7 +10,7 @@ Want to motivate me to improve this quicker? [Sponsor me](https://github.com/spo
 
 ## Summary
 
-OctoCostToo is an [AppDaemon](https://www.home-assistant.io/docs/ecosystem/appdaemon/) app for [Home Assistant](https://www.home-assistant.io/) which calculates the daily, monthly and yearly cost and usage of the Octopus Energy tariffs.
+OctoCostToo is an [AppDaemon](https://www.home-assistant.io/docs/ecosystem/appdaemon/) app for [Home Assistant](https://www.home-assistant.io/) which calculates the daily, monthly and yearly cost and usage of the Octopus Energy tariffs. This is a refactored and improved fork of the now archived [octocost](https://github.com/badguy99/octocost).
 
 By default OctoCostToo only gathers usage and cost information for the current (as of Jan 2021) Agile tariff: `AGILE-18-02-21` but can be configured to gather usage and cost information for an another electricity tariff, giving you the opportunity to compare your current tariff to the Agile tariff.
 
