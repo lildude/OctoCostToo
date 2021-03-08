@@ -1,5 +1,5 @@
 [run]
 branch = True
 relative_files = True
-source = OctoCost
+source = OctoCostToo
 omit = *tests*
