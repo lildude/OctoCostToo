@@ -14,8 +14,6 @@ OctoCostToo is an [AppDaemon](https://www.home-assistant.io/docs/ecosystem/appda
 
 By default OctoCostToo only gathers usage and cost information for the current (as of Jan 2021) Agile tariff: `AGILE-18-02-21` but can be configured to gather usage and cost information for an another electricity tariff, giving you the opportunity to compare your current tariff to the Agile tariff.
 
-By default OctoCostToo only gathers usage and cost information for the current (as of Jan 2021) Agile tariff: `AGILE-18-02-21` but can be configured to gather usage and cost information for an another electricity tariff, giving you the opportunity to compare your current tariff to the Agile tariff.
-
 Usage and cost information can also be gathered for a gas tariff.
 
 OctoCostToo creates and sets sensors for daily, monthly and yearly cost (£) and usage (kWh), up to and including yesterday:
