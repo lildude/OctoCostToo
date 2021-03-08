@@ -5,8 +5,9 @@ from unittest.mock import Mock
 
 import pytest
 from appdaemon_testing.pytest import automation_fixture
-from apps.octocosttoo.octocosttoo import OctoCostToo
 from freezegun import freeze_time
+
+from apps.octocosttoo.octocosttoo import OctoCostToo
 
 
 @automation_fixture(
@@ -302,7 +303,9 @@ def test_callback_sets_electricity_states(hass_driver, octocost: OctoCostToo):
 
 
 @freeze_time("2021-02-01")
-def test_callback_sets_comparison_electricity_states(hass_driver, octocost: OctoCostToo):
+def test_callback_sets_comparison_electricity_states(
+    hass_driver, octocost: OctoCostToo
+):
     set_state = hass_driver.get_mock("set_state")
     log = hass_driver.get_mock("log")
     octocost.calculate_cost_and_usage = Mock(return_value=[7.7, 109.0])
