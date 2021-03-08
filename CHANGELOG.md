@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Renamed the project to OctoCostToo after forking.
 - Many of the original configuration options have been renamed to use snake_case.
 - Gas usage used to determine the cost in £ per kWh is converted from m3 to kWh using the formula: `X × 1.02264 × 39.0 ÷ 3.6` or simply `X × 11.0786`.
+- Refactored a lot of the code to reduce duplication and improve maintenance.
 
 ### Fixed
 
