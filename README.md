@@ -14,9 +14,11 @@ OctoCostToo is an [AppDaemon](https://www.home-assistant.io/docs/ecosystem/appda
 
 By default OctoCostToo only gathers usage and cost information for the current (as of Jan 2021) Agile tariff: `AGILE-18-02-21` but can be configured to gather usage and cost information for an another electricity tariff, giving you the opportunity to compare your current tariff to the Agile tariff.
 
+By default OctoCost only gathers usage and cost information for the current (as of Jan 2021) Agile tariff: `AGILE-18-02-21` but can be configured to gather usage and cost information for an another electricity tariff, giving you the opportunity to compare your current tariff to the Agile tariff.
+
 Usage and cost information can also be gathered for a gas tariff.
 
-OctoCostToo creates and sets sensors for daily, monthly and yearly cost (£) and usage (kWh), up to and including yesterday:
+OctoCost creates and sets sensors for daily, monthly and yearly cost (£) and usage (kWh), up to and including yesterday:
 
 ```yaml
 sensor.octopus_daily_cost
@@ -27,7 +29,7 @@ sensor.octopus_yearly_cost
 sensor.octopus_yearly_usage
 ```
 
-If a comparison electricity tariff is configured, OctoCostToo will also create the following sensors:
+If a comparison electricity tariff is configured, OctoCost will also create the following sensors:
 
 ```yaml
 sensor.octopus_comparison_daily_cost
@@ -35,7 +37,7 @@ sensor.octopus_comparison_monthly_cost
 sensor.octopus_comparison_yearly_cost
 ```
 
-If the gas section is configured, OctoCostToo will also create the following sensors:
+If the gas section is configured, OctoCost will also create the following sensors:
 
 ```yaml
 sensor.octopus_monthly_gas_cost
@@ -73,9 +75,9 @@ The module and class sections need to remain as above, other sections should be 
 
 | Field             | Changeable | Example          |
 | -----             | ---------- | -------          |
-| Title             | Yes        | OctoCostToo      |
-| module            | No         | octocosttoo      |
-| class             | No         | OctoCostTo       |
+| Title             | Yes        | octocost         |
+| module            | No         | octocost         |
+| class             | No         | OctoCost         |
 | region            | Yes        | H                |
 | mpan              | Yes        | 2000012345678    |
 | serial            | Yes        | 20L123456        |

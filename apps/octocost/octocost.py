@@ -133,72 +133,58 @@ class OctoCostToo(hass.Hass):
 
         energy = "gas" if self.gas else "electricity"
         tariff = re.search(r"products/([^/]+)/", self.cost_url).group(1)
-        cost_n_use = {}
-        for period in ["daily", "monthly", "yearly"]:
+        cost_usage = {}
+        for period, start in {
+            "daily": start_day,
+            "monthly": start_month,
+            "yearly": start_year,
+        }.items():
+            # Get the usage and calculate the cost
             (
-                cost_n_use[f"{period}_usage"],
-                cost_n_use[f"{period}_cost"],
-            ) = self.calculate_cost_and_usage(start=start_day)
-
-        daily_usage, daily_cost = self.calculate_cost_and_usage(start=start_day)
-        self.log(
-            "Yesterday {} {} usage: {}".format(tariff, energy, daily_usage),
-            level="INFO",
-        )
-        self.log(
-            "Yesterday {} {} cost: {} p".format(tariff, energy, daily_cost),
-            level="INFO",
-        )
-
-        monthly_usage, monthly_cost = self.calculate_cost_and_usage(start=start_month)
-        self.log(
-            "Total monthly {} {} usage: {}".format(tariff, energy, monthly_usage),
-            level="INFO",
-        )
-        self.log(
-            "Total monthly {} {} cost: {} p".format(tariff, energy, monthly_cost),
-            level="INFO",
-        )
-
-        yearly_usage, yearly_cost = self.calculate_cost_and_usage(start=start_year)
-        self.log(
-            "Total yearly {} {} usage: {}".format(tariff, energy, yearly_usage),
-            level="INFO",
-        )
-        self.log(
-            "Total yearly {} {} cost: {} p".format(tariff, energy, yearly_cost),
-            level="INFO",
-        )
-
-        if self.gas:
-            for period in ["yearly", "monthly"]:
+                cost_usage[f"{period}_usage"],
+                cost_usage[f"{period}_cost"],
+            ) = self.calculate_cost_and_usage(start=start)
+            # Log results for debugging
+            self.log(
+                "{} {} {} usage: {}".format(
+                    period.capitalize(), tariff, energy, cost_usage[f"{period}_usage"]
+                ),
+                level="INFO",
+            )
+            self.log(
+                "{} {} {} cost: {} p".format(
+                    period.capitalize(), tariff, energy, cost_usage[f"{period}_cost"]
+                ),
+                level="INFO",
+            )
+            # Set the states
+            if self.gas:
                 self.set_state(
                     f"sensor.octopus_{period}_gas_usage",
-                    state=round(locals()[f"{period}_usage"], 2),
+                    state=round(cost_usage[f"{period}_usage"], 2),
                     attributes={"unit_of_measurement": "m3", "icon": "mdi:fire"},
                 )
                 self.set_state(
                     f"sensor.octopus_{period}_gas_cost",
-                    state=round(locals()[f"{period}_cost"] / 100, 2),
+                    state=round(cost_usage[f"{period}_cost"] / 100, 2),
                     attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
                 )
-        else:
-            for period in ["yearly", "monthly", "daily"]:
+            else:
                 self.set_state(
                     f"sensor.octopus_{period}_usage",
-                    state=round(locals()[f"{period}_usage"], 2),
+                    state=round(cost_usage[f"{period}_usage"], 2),
                     attributes={"unit_of_measurement": "kWh", "icon": "mdi:flash"},
                 )
                 if "AGILE" in tariff:
                     self.set_state(
                         f"sensor.octopus_{period}_cost",
-                        state=round(locals()[f"{period}_cost"] / 100, 2),
+                        state=round(cost_usage[f"{period}_cost"] / 100, 2),
                         attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
                     )
                 else:
                     self.set_state(
                         f"sensor.octopus_comparison_{period}_cost",
-                        state=round(locals()[f"{period}_cost"] / 100, 2),
+                        state=round(cost_usage[f"{period}_cost"] / 100, 2),
                         attributes={"unit_of_measurement": "£", "icon": "mdi:cash"},
                     )
 
@@ -213,11 +199,10 @@ class OctoCostToo(hass.Hass):
         std_chg = 0
         cost = []
         utc = pytz.timezone("UTC")
+        request_error = False
         expected_count = self.calculate_count(start=start)
-        self.log("period_from: {}T00:00:00Z".format(start.isoformat()), level="DEBUG")
-        self.log(
-            "period_to: {}T23:59:59Z".format(self.yesterday.isoformat()), level="DEBUG"
-        )
+        self.log(f"period_from: {start.isoformat()}T00:00:00Z", level="DEBUG")
+        self.log(f"period_to: {self.yesterday.isoformat()}T23:59:59Z", level="DEBUG")
 
         consump_resp = requests.get(
             url=self.use_url
@@ -241,22 +226,23 @@ class OctoCostToo(hass.Hass):
 
         if consump_resp.status_code != 200:
             self.log(
-                "Error {} getting consumption data: {}".format(
-                    consump_resp.status_code, consump_resp.text
-                ),
+                f"Error {consump_resp.status_code} getting consumption data: {consump_resp.text}",
                 level="ERROR",
             )
+            request_error = True
         if cost_resp.status_code != 200:
             self.log(
-                "Error {} getting cost data: {}".format(
-                    cost_resp.status_code, cost_resp.text
-                ),
+                f"Error {cost_resp.status_code} getting cost data: {cost_resp.text}",
                 level="ERROR",
             )
+            request_error = True
 
-        # If cost_url contains `-1R-FIX-`, assume it's a fixed rate and get the standing charge too.
-        # Applies to fixed rate gas and fixed rate electricity
-        if "-1R-FIX-" in self.cost_url:
+        # Don't attempt any further processing as we don't have the data to process
+        if request_error:
+            return
+
+        # If cost_url does not contain `AGILE`, assume it's a fixed rate and get the standing charge too.
+        if "AGILE" not in self.cost_url:
             if "gas-tariffs" in self.cost_url:
                 std_chg_url = self.tariff_url(
                     energy="gas", tariff=self.gas_tariff, units="standing-charges"
@@ -276,9 +262,7 @@ class OctoCostToo(hass.Hass):
             )
             if standing_chg_resp.status_code != 200:
                 self.log(
-                    "Error {} getting standing charge data: {}".format(
-                        standing_chg_resp.status_code, standing_chg_resp.text
-                    ),
+                    f"Error {standing_chg_resp.status_code} getting standing charge data: {standing_chg_resp.text}",
                     level="ERROR",
                 )
             else:
@@ -303,14 +287,14 @@ class OctoCostToo(hass.Hass):
         for period in results:
             current_index = results.index(period)
             usage = usage + (results[current_index]["consumption"])
-            if "-1R-FIX-" in self.cost_url:
+            if "AGILE" not in self.cost_url:
                 # Only dealing with gas price which doesn't vary at the moment
                 if cost_json["count"] == 1:
                     cost = cost_json["results"][0]["value_inc_vat"]
                     kwh = results[current_index]["consumption"]
                     # Convert consumption from m3 to kWh for gas
                     if "gas-tariffs" in self.cost_url:
-                        kwh = kwh * 11.1868
+                        kwh = kwh * 11.0786
 
                     price = price + (cost * kwh)
                 else:
