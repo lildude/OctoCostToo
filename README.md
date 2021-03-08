@@ -91,48 +91,49 @@ The module and class sections need to remain as above, other sections should be 
 The `start_date` setting should be set to the date you started on the Agile Octopus tariff, not the date you joined Octopus Energy. It is used to adjust the start point if you joined within the current year or month, it should not be left blank if you joined earlier.
 `region` is the region letter from the end of `E-1R-AGILE-18-02-21-H` which can be found on the [Octopus Energy developer dashboard](https://octopus.energy/dashboard/developer/) webpage in the Unit Rates section for your account.
 
+## Limitations
+
+- OctoCostToo only caters for single-rate comparison electricity and gas tariffs.
+
 ### Lovelace UI Cards
 
 Once the sensors are created, they can be displayed as cards within the Lovelace UI. For example:
 
 ```yaml
-      - entities:
-          - entity: sensor.octopus_yearly_usage
-            icon: 'mdi:flash'
-            name: Yearly Usage (kWh)
-          - entity: sensor.octopus_yearly_cost
-            icon: 'mdi:cash'
-            name: Yearly Cost (£)
-          - entity: sensor.octopus_monthly_usage
-            icon: 'mdi:flash'
-            name: Monthly Usage (kWh)
-          - entity: sensor.octopus_monthly_cost
-            icon: 'mdi:cash'
-            name: Monthly Cost (£)
-        show_icon: true
-        title: Octopus Usage / Cost
-        type: glance
+- entities:
+    - entity: sensor.octopus_yearly_usage
+      icon: 'mdi:flash'
+      name: Yearly Usage (kWh)
+    - entity: sensor.octopus_yearly_cost
+      icon: 'mdi:cash'
+      name: Yearly Cost (£)
+    - entity: sensor.octopus_monthly_usage
+      icon: 'mdi:flash'
+      name: Monthly Usage (kWh)
+    - entity: sensor.octopus_monthly_cost
+      icon: 'mdi:cash'
+      name: Monthly Cost (£)
+  show_icon: true
+  title: Octopus Usage / Cost
+  type: glance
 ```
 
 ![Example Lovelace UI Usage and Cost glance card](https://github.com/lildude/OctoCostToo/blob/main/LovelaceUsageCard.PNG)
+
+## Contributing
+
+Want to contribute to this project? Great! Fork the repo, make your changes (don't forget to add tests 😉) and submit a pull request.
+
+You can install the necessary dependencies and run the tests locally as follows:
+
+```console
+$ python -m pip install --upgrade pip
+$ pip install -r requirements-test.txt
+$ pytest
+```
 
 ## Credit
 
 OctoCostToo is a fork of the original [octocost](https://github.com/badguy99/octocost).
 
 **NOTE:** The configuration for OctoCostToo is not compatible with the original.
-
----
-
-## Changes
-
-- Add support for fixed tariff for easy comparison
-- Include standing charge in gas costing and fixed leccy
-- Added unit testing from https://pypi.org/project/appdaemon-testing/
-- Gas m3 is converted to kWh at assuming: the volume correction factor is 1.02264 and calorific value is 40 giving a formula of  X m3 * 11.1868 = Y kWh
-
-## Limitations
-
-- Only accounts for single-rate electicity on fixed rate plans
-
-
