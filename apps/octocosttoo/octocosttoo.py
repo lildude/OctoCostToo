@@ -10,7 +10,7 @@ from appdaemon.plugins.hass import hassapi as hass
 BASEURL = "https://api.octopus.energy/v1"
 
 
-class OctoCost(hass.Hass):
+class OctoCostToo(hass.Hass):
     def initialize(self):
         self.auth = self.args["auth"]
         self.mpan = self.args["mpan"]

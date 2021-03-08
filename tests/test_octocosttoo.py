@@ -5,13 +5,12 @@ from unittest.mock import Mock
 
 import pytest
 from appdaemon_testing.pytest import automation_fixture
+from apps.octocosttoo.octocosttoo import OctoCostToo
 from freezegun import freeze_time
-
-from apps.octocost.octocost import OctoCost
 
 
 @automation_fixture(
-    OctoCost,
+    OctoCostToo,
     args={
         "auth": "sk_live_abcdefghijklmnopqrstuvwxyz",
         "mpan": "12345",
@@ -28,16 +27,16 @@ from apps.octocost.octocost import OctoCost
     },
     initialize=True,
 )
-def octocost() -> OctoCost:
+def octocost() -> OctoCostToo:
     pass
 
 
 @pytest.mark.usefixtures("mock_elec_meter_points")
-def test_find_region(octocost: OctoCost):
+def test_find_region(octocost: OctoCostToo):
     assert "H" == octocost.find_region("12345")
 
 
-def test_calculate_count(octocost: OctoCost):
+def test_calculate_count(octocost: OctoCostToo):
     octocost.yesterday = datetime.date(2020, 1, 19)
     start_day = datetime.date(2020, 1, 19)
     # One day's worth of 30 minute windows between start and end of the same day
@@ -47,7 +46,7 @@ def test_calculate_count(octocost: OctoCost):
     assert 95 == octocost.calculate_count(start_day)
 
 
-def test_tariff_url(octocost: OctoCost):
+def test_tariff_url(octocost: OctoCostToo):
     default_url = octocost.tariff_url()
     gas_tariff_std_chg_url = octocost.tariff_url(
         energy="gas", tariff="FIX-12M-20-09-21", units="standing-charges"
@@ -63,7 +62,7 @@ def test_tariff_url(octocost: OctoCost):
     )
 
 
-def test_consumption_url(octocost: OctoCost):
+def test_consumption_url(octocost: OctoCostToo):
     default_url = octocost.consumption_url()
     gas_consumption_url = octocost.consumption_url("gas")
 
@@ -80,7 +79,7 @@ def test_consumption_url(octocost: OctoCost):
 @pytest.mark.usefixtures(
     "mock_elec_consumption_one_day", "mock_elec_agile_cost_one_day"
 )
-def test_calculate_cost_and_usage_agile_elec_only(hass_driver, octocost: OctoCost):
+def test_calculate_cost_and_usage_agile_elec_only(hass_driver, octocost: OctoCostToo):
     octocost.yesterday = datetime.date(2021, 1, 18)
     octocost.use_url = octocost.consumption_url()
     octocost.cost_url = octocost.tariff_url()
@@ -99,7 +98,7 @@ def test_calculate_cost_and_usage_agile_elec_only(hass_driver, octocost: OctoCos
     "mock_gas_consumption_one_day",
     "mock_gas_rates",
 )
-def test_calculate_cost_and_usage_standard_unit_rate_gas_only(octocost: OctoCost):
+def test_calculate_cost_and_usage_standard_unit_rate_gas_only(octocost: OctoCostToo):
     octocost.yesterday = datetime.date(2021, 1, 18)
     octocost.use_url = octocost.consumption_url("gas")
     octocost.cost_url = octocost.tariff_url(energy="gas", tariff=octocost.gas_tariff)
@@ -111,7 +110,7 @@ def test_calculate_cost_and_usage_standard_unit_rate_gas_only(octocost: OctoCost
 
 
 @pytest.mark.usefixtures("mock_elec_consumption_one_day", "mock_elec_fixed_rates")
-def test_calculate_cost_and_usage_standard_unit_rate_elec_only(octocost: OctoCost):
+def test_calculate_cost_and_usage_standard_unit_rate_elec_only(octocost: OctoCostToo):
     octocost.yesterday = datetime.date(2021, 1, 18)
     octocost.use_url = octocost.consumption_url()
     octocost.cost_url = octocost.tariff_url(tariff=octocost.comparison_tariff)
@@ -124,7 +123,7 @@ def test_calculate_cost_and_usage_standard_unit_rate_elec_only(octocost: OctoCos
 
 @pytest.mark.usefixtures("mock_elec_consumption_five_days")
 def test_calculate_cost_and_usage_standard_unit_rate_elec_only_five_days(
-    octocost: OctoCost,
+    octocost: OctoCostToo,
 ):
     octocost.yesterday = datetime.date(2021, 1, 18)
     octocost.use_url = octocost.consumption_url()
@@ -137,7 +136,7 @@ def test_calculate_cost_and_usage_standard_unit_rate_elec_only_five_days(
 
 
 def test_calculate_cost_and_usage_consumption_error(
-    requests_mock, hass_driver, octocost: OctoCost
+    requests_mock, hass_driver, octocost: OctoCostToo
 ):
     cons_matcher = re.compile("consumption")
     requests_mock.get(cons_matcher, status_code=401, text="401 Unauthorized")
@@ -157,7 +156,7 @@ def test_calculate_cost_and_usage_consumption_error(
 
 
 def test_calculate_cost_and_usage_cost_error(
-    requests_mock, hass_driver, octocost: OctoCost
+    requests_mock, hass_driver, octocost: OctoCostToo
 ):
     cons_matcher = re.compile("consumption")
     requests_mock.get(cons_matcher, status_code=200, text="This isn't important")
@@ -176,7 +175,7 @@ def test_calculate_cost_and_usage_cost_error(
 
 @pytest.mark.usefixtures("mock_elec_consumption_one_day")
 def test_calculate_cost_and_standing_charge_error(
-    requests_mock, hass_driver, octocost: OctoCost
+    requests_mock, hass_driver, octocost: OctoCostToo
 ):
     unit_matcher = re.compile("standard-unit-rates")
     requests_mock.get(
@@ -197,7 +196,7 @@ def test_calculate_cost_and_standing_charge_error(
     )
 
 
-def test_callbacks_run_in(hass_driver, octocost: OctoCost):
+def test_callbacks_run_in(hass_driver, octocost: OctoCostToo):
     run_in = hass_driver.get_mock("run_in")
     run_in.assert_any_call(
         octocost.cost_and_usage_callback,
@@ -222,7 +221,7 @@ def test_callbacks_run_in(hass_driver, octocost: OctoCost):
     )
 
 
-def test_callbacks_run_daily(hass_driver, octocost: OctoCost):
+def test_callbacks_run_daily(hass_driver, octocost: OctoCostToo):
     run_daily = hass_driver.get_mock("run_daily")
     run_daily.assert_any_call(
         octocost.cost_and_usage_callback,
@@ -248,7 +247,7 @@ def test_callbacks_run_daily(hass_driver, octocost: OctoCost):
 
 
 @freeze_time("2021-02-01")
-def test_callback_sets_electricity_states(hass_driver, octocost: OctoCost):
+def test_callback_sets_electricity_states(hass_driver, octocost: OctoCostToo):
     set_state = hass_driver.get_mock("set_state")
     log = hass_driver.get_mock("log")
     octocost.calculate_cost_and_usage = Mock(return_value=[7.7, 109.0])
@@ -303,7 +302,7 @@ def test_callback_sets_electricity_states(hass_driver, octocost: OctoCost):
 
 
 @freeze_time("2021-02-01")
-def test_callback_sets_comparison_electricity_states(hass_driver, octocost: OctoCost):
+def test_callback_sets_comparison_electricity_states(hass_driver, octocost: OctoCostToo):
     set_state = hass_driver.get_mock("set_state")
     log = hass_driver.get_mock("log")
     octocost.calculate_cost_and_usage = Mock(return_value=[7.7, 109.0])
@@ -364,7 +363,7 @@ def test_callback_sets_comparison_electricity_states(hass_driver, octocost: Octo
 
 
 @freeze_time("2020-01-01")
-def test_callback_sets_gas_states(hass_driver, octocost: OctoCost):
+def test_callback_sets_gas_states(hass_driver, octocost: OctoCostToo):
     set_state = hass_driver.get_mock("set_state")
     log = hass_driver.get_mock("log")
     octocost.calculate_cost_and_usage = Mock(return_value=[7.7, 150.8])
